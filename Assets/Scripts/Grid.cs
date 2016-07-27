@@ -10,6 +10,7 @@ public class Grid : MonoBehaviour
     public Vector2 gridWorldSize;
     public float nodeRadius;
     public TerrainType[] walkableRegions;
+    public float checkRadiusModifier = 2;
     LayerMask walkableMask;
     Dictionary<int, int> walkableRegionsDictionary = new Dictionary<int, int>();
 
@@ -26,10 +27,10 @@ public class Grid : MonoBehaviour
 
 
         // Note: Layers are stored in a 32 bit int
-        foreach(TerrainType region in walkableRegions)
+        foreach (TerrainType region in walkableRegions)
         {
             walkableMask.value |= region.terrainMask.value;
-            walkableRegionsDictionary.Add((int)Mathf.Log((float)region.terrainMask.value, 2f),region.terrainPenalty);
+            walkableRegionsDictionary.Add((int)Mathf.Log((float)region.terrainMask.value, 2f), region.terrainPenalty);
         }
 
         CreateGrid();
@@ -53,20 +54,26 @@ public class Grid : MonoBehaviour
             for (int y = 0; y < gridSizeY; y++)
             {
                 Vector3 worldPoint = worldBottomLeft + Vector3.right * (x * nodeDiameter + nodeRadius) + Vector3.forward * (y * nodeDiameter + nodeRadius);
-                bool walkable = !(Physics.CheckSphere(worldPoint, nodeRadius, unwalkableMask));
+                bool walkable = !(Physics.CheckSphere(worldPoint, nodeRadius * checkRadiusModifier, unwalkableMask));
 
                 int movementPenalty = 0;
+                float height = 0;
                 // raycast
                 if (walkable)
                 {
                     Ray ray = new Ray(worldPoint + Vector3.up * 50, Vector3.down);
                     RaycastHit hit;
-                    if(Physics.Raycast(ray, out hit, 100, walkableMask))
+                    if (Physics.Raycast(ray, out hit, 100, walkableMask))
                     {
+
+                        // Determine the movement penalty of the terrain type
                         walkableRegionsDictionary.TryGetValue(hit.collider.gameObject.layer, out movementPenalty);
+
+                        // Get the height of a block
+                        worldPoint.y = height = Mathf.Clamp((hit.transform.position.y + hit.collider.bounds.extents.y) * 3f, 1, Mathf.Infinity);
                     }
                 }
-                grid[x, y] = new Node(walkable, worldPoint, x, y, movementPenalty);
+                grid[x, y] = new Node(walkable, worldPoint, x, y, height, movementPenalty);
             }
         }
     }
