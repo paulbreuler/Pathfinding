@@ -6,8 +6,9 @@ public abstract class Unit : MonoBehaviour
     #region public variables
     public bool drawGizmos = false;
     public float gravity = 9.8f;
-    public Transform target;
+    public Transform m_target;
     public float movementSpeed = 20;
+    public float rotationSpeed = 85;
     [Tooltip("How close to get to waypoint before moving towards next. Fixes movement bug. " +
         "Issue seen when close to waypoint this.transform cannot get to exact position and oscillates.")]
     public float distanceToWaypoint = 1;
@@ -20,12 +21,15 @@ public abstract class Unit : MonoBehaviour
     protected Vector3[] m_path;
     protected int m_targetIndex;
     protected CharacterController m_characterController;
+
+    private Vector3 m_lastKnownPosition = Vector3.zero;
+    private Quaternion m_lookAtRotation;
     #endregion
 
     public virtual void Start()
     {
         m_characterController = GetComponent<CharacterController>();
-        PathRequestManager.RequestPath(transform.position, target.position, OnPathFound);
+        PathRequestManager.RequestPath(transform.position, m_target.position, OnPathFound);
     }
 
     public virtual void OnPathFound(Vector3[] newPath, bool pathSuccessful)
@@ -77,13 +81,26 @@ public abstract class Unit : MonoBehaviour
         m_verticalSpeed -= gravity * Time.deltaTime;
 
         // Handles steps and other cases by default
-        //m_characterController.Move(new Vector3(0, m_verticalSpeed, 0) + direction.normalized * movementSpeed * Time.deltaTime);
-        transform.Translate(direction.normalized * movementSpeed * Time.deltaTime, Space.World);
+        m_characterController.Move(new Vector3(0, m_verticalSpeed, 0) + direction.normalized * movementSpeed * Time.deltaTime);
+        //transform.Translate(direction.normalized * movementSpeed * Time.deltaTime, Space.World);
     }
 
+    /// <summary>
+    /// Rotate over time to look at target.
+    /// </summary>
     public virtual void UpdateRotation()
     {
-        transform.LookAt(target);
+        // Get look direction
+        if (m_lastKnownPosition != m_target.transform.position)
+        {
+            m_lastKnownPosition = m_target.transform.position;
+            m_lookAtRotation = Quaternion.LookRotation(m_lastKnownPosition - transform.position);
+            //m_lookAtRotation.y = 0; removing Y breaks rotation. Probably has to do with conversion to quaternion.
+        }
+
+        // If we are not already looking at target continue to rotate.
+        if (transform.rotation != m_lookAtRotation)
+            transform.rotation = Quaternion.RotateTowards(transform.rotation, m_lookAtRotation, rotationSpeed * Time.deltaTime);
     }
 
     /// <summary>
@@ -97,7 +114,7 @@ public abstract class Unit : MonoBehaviour
         // TODO Ray should be at eye level
         Ray ray = new Ray(transform.position, transform.forward);
         RaycastHit hit;
-        if (Physics.Raycast(ray, out hit, distance) && hit.transform == target)
+        if (Physics.Raycast(ray, out hit, distance) && hit.transform == m_target)
         {
             Debug.DrawLine(transform.position, hit.point, Color.red, 5);
             result = true;
