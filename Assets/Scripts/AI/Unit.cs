@@ -43,7 +43,6 @@ public abstract class Unit : MonoBehaviour
 
     public virtual IEnumerator FollowPath()
     {
-        Debug.Log("Base class Here");
         Vector3 currentWaypoint = m_path[0];
         while (true)
         {

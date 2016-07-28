@@ -1,7 +1,8 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class StandardProjectile : ProjectileBase {
+public class StandardProjectile : ProjectileBase
+{
 
     private Vector3 m_direction;
     private bool m_fired;
@@ -13,7 +14,7 @@ public class StandardProjectile : ProjectileBase {
     {
         if (m_fired)
         {
-            
+
             if (m_target)
                 transform.position = Vector3.MoveTowards(transform.position, m_target.transform.position, speed * Time.deltaTime);
 
@@ -33,16 +34,26 @@ public class StandardProjectile : ProjectileBase {
             m_turret = projectileSpawn;
             m_damage = damage;
 
-            Destroy(gameObject, 5.0f);
+            Destroy(gameObject, 10.0f);
         }
     }
 
     void OnCollisionEnter(Collision other)
     {
-        if (other.gameObject.GetComponent<Unit>())
+        if (other.gameObject == m_target)
         {
-            Destroy(gameObject);
+            DamageData damageData = new DamageData();
+            damageData.damage = m_damage;
+
+            MessageHandler messageHandler = m_target.GetComponent<MessageHandler>();
+
+            messageHandler.CustomSendMessage(MessageType.DAMAGED, m_turret, damageData);
         }
+
+        // Don't destroy if you hit another projectile
+        if (other.gameObject.GetComponent<ProjectileBase>() == null)
+            Destroy(gameObject);
+
 
     }
 

@@ -63,19 +63,22 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Assets\Scripts\Grid.cs" />
-    <Compile Include="Assets\Scripts\Heap.cs" />
-    <Compile Include="Assets\Scripts\NPCUnit.cs" />
-    <Compile Include="Assets\Scripts\Node.cs" />
-    <Compile Include="Assets\Scripts\PathRequestManager.cs" />
-    <Compile Include="Assets\Scripts\Pathfinding.cs" />
-    <Compile Include="Assets\Scripts\TurretAI\ProjectileBase.cs" />
-    <Compile Include="Assets\Scripts\TurretAI\RangeChecker.cs" />
+    <Compile Include="Assets\Scripts\AI\Grid.cs" />
+    <Compile Include="Assets\Scripts\AI\Heap.cs" />
+    <Compile Include="Assets\Scripts\AI\NPCUnit.cs" />
+    <Compile Include="Assets\Scripts\AI\Node.cs" />
+    <Compile Include="Assets\Scripts\AI\PathRequestManager.cs" />
+    <Compile Include="Assets\Scripts\AI\Pathfinding.cs" />
+    <Compile Include="Assets\Scripts\AI\Unit.cs" />
+    <Compile Include="Assets\Scripts\Health\Death.cs" />
+    <Compile Include="Assets\Scripts\Health\Health.cs" />
+    <Compile Include="Assets\Scripts\Projectile\ProjectileBase.cs" />
+    <Compile Include="Assets\Scripts\Projectile\StandardProjectile.cs" />
     <Compile Include="Assets\Scripts\TurretAI\ShootingSystem.cs" />
-    <Compile Include="Assets\Scripts\TurretAI\StandardProjectile.cs" />
     <Compile Include="Assets\Scripts\TurretAI\TrackingSystem.cs" />
     <Compile Include="Assets\Scripts\TurretAI\TurretAI.cs" />
-    <Compile Include="Assets\Scripts\Unit.cs" />
+    <Compile Include="Assets\Scripts\Utility\MessageHandler.cs" />
+    <Compile Include="Assets\Scripts\Utility\RangeChecker.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\SyntaxTree\UnityVS\2015\UnityVS.CSharp.targets" />
 </Project>

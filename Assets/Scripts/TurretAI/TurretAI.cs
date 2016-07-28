@@ -26,7 +26,6 @@ public class TurretAI : MonoBehaviour
         if (!m_tracker || !m_shootingSystem || !m_rangeChecker)
             return;
 
-        Debug.Log("Here");
         switch (aiState)
         {
             case AiStates.NEAREST:

@@ -22,7 +22,6 @@ public class ShootingSystem : MonoBehaviour
         if (!m_target)
             return;
 
-        Debug.Log("Here");
         m_fireTimer += Time.deltaTime;
         if (m_fireTimer >= fireRate)
         {

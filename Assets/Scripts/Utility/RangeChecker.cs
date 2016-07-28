@@ -23,7 +23,6 @@ public class RangeChecker : MonoBehaviour
                 //Debug.Log("Exiting Invalid");
                 return;
             }
-            Debug.Log("Target Found");
 
             m_targets.Add(other.gameObject);
         }
