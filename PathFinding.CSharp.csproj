@@ -69,6 +69,12 @@
     <Compile Include="Assets\Scripts\Node.cs" />
     <Compile Include="Assets\Scripts\PathRequestManager.cs" />
     <Compile Include="Assets\Scripts\Pathfinding.cs" />
+    <Compile Include="Assets\Scripts\TurretAI\ProjectileBase.cs" />
+    <Compile Include="Assets\Scripts\TurretAI\RangeChecker.cs" />
+    <Compile Include="Assets\Scripts\TurretAI\ShootingSystem.cs" />
+    <Compile Include="Assets\Scripts\TurretAI\StandardProjectile.cs" />
+    <Compile Include="Assets\Scripts\TurretAI\TrackingSystem.cs" />
+    <Compile Include="Assets\Scripts\TurretAI\TurretAI.cs" />
     <Compile Include="Assets\Scripts\Unit.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\SyntaxTree\UnityVS\2015\UnityVS.CSharp.targets" />

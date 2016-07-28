@@ -78,7 +78,8 @@ public abstract class Unit : MonoBehaviour
         m_verticalSpeed -= gravity * Time.deltaTime;
 
         // Handles steps and other cases by default
-        m_characterController.Move(new Vector3(0, m_verticalSpeed, 0) + direction.normalized * movementSpeed * Time.deltaTime);
+        //m_characterController.Move(new Vector3(0, m_verticalSpeed, 0) + direction.normalized * movementSpeed * Time.deltaTime);
+        transform.Translate(direction.normalized * movementSpeed * Time.deltaTime, Space.World);
     }
 
     public virtual void UpdateRotation()
