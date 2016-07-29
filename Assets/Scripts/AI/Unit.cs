@@ -22,7 +22,7 @@ public abstract class Unit : MonoBehaviour
     protected int m_targetIndex;
     protected CharacterController m_characterController;
 
-    private Vector3 m_lastKnownPosition = Vector3.zero;
+    private Vector3 m_lastKnownPosition;
     private Quaternion m_lookAtRotation;
     #endregion
 
@@ -64,8 +64,6 @@ public abstract class Unit : MonoBehaviour
 
             // Occurs each frame
             UpdatePosition(currentWaypoint);
-            UpdateRotation();
-
             yield return null;
 
         }
@@ -90,13 +88,9 @@ public abstract class Unit : MonoBehaviour
     /// </summary>
     public virtual void UpdateRotation()
     {
-        // Get look direction
-        if (m_lastKnownPosition != m_target.transform.position)
-        {
-            m_lastKnownPosition = m_target.transform.position;
-            m_lookAtRotation = Quaternion.LookRotation(m_lastKnownPosition - transform.position);
-            //m_lookAtRotation.y = 0; removing Y breaks rotation. Probably has to do with conversion to quaternion.
-        }
+        m_lastKnownPosition = m_target.transform.position;
+        m_lookAtRotation = Quaternion.LookRotation(m_lastKnownPosition - transform.position);
+        //m_lookAtRotation.y = 0; removing Y breaks rotation. Probably has to do with conversion to quaternion.
 
         // If we are not already looking at target continue to rotate.
         if (transform.rotation != m_lookAtRotation)

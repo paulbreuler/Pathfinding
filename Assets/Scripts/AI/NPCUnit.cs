@@ -4,6 +4,11 @@ using System.Collections;
 public class NPCUnit : Unit
 {
 
+    void Update()
+    {
+        UpdateRotation(); 
+    }
+
     public override IEnumerator FollowPath()
     {
         Vector3 currentWaypoint = m_path[0];
@@ -22,16 +27,17 @@ public class NPCUnit : Unit
             }
 
             // Determine if target space is occupied
-            if (StopBeforeTarget(2))
+            if (StopBeforeTarget(stopBeforeDistance))
             {
-                m_targetIndex++; // Clear out last waypoint
                 yield break;
+            }else
+            {
+                Debug.Log("pos");
+                // Occurs each frame
+                UpdatePosition(currentWaypoint);
+                
             }
-
-            // Occurs each frame
-            UpdatePosition(currentWaypoint);
-            UpdateRotation();
-
+            
             yield return null;
 
         } // End While
