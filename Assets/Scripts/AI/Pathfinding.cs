@@ -121,7 +121,9 @@ public class Pathfinding : MonoBehaviour
             // If path has changed direction
             if (directionNew != directionOld)
             {
-                waypoints.Add(path[i].worldPosition);
+                // Does not adapt to height of character
+                // Maybe put empty game object at ground level
+                waypoints.Add(path[i].worldPosition + Vector3.up );
             }
             directionOld = directionNew;
         }

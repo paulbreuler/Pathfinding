@@ -11,12 +11,13 @@ public class Grid : MonoBehaviour
     public float nodeRadius;
     public TerrainType[] walkableRegions;
     public float checkRadiusModifier = 2;
+    public float terrainOffset = 3;
     LayerMask walkableMask;
     Dictionary<int, int> walkableRegionsDictionary = new Dictionary<int, int>();
 
     Node[,] grid;
 
-    float nodeDiameter;
+    protected float nodeDiameter;
     int gridSizeX, gridSizeY;
 
     void Awake()
@@ -70,10 +71,13 @@ public class Grid : MonoBehaviour
                         walkableRegionsDictionary.TryGetValue(hit.collider.gameObject.layer, out movementPenalty);
 
                         // Get the height of a block
-                        worldPoint.y = height = Mathf.Clamp((hit.transform.position.y + hit.collider.bounds.extents.y) * 3f, 1, Mathf.Infinity);
+                        worldPoint.y = height = (hit.transform.position.y + hit.collider.bounds.extents.y);
                     }
                 }
+
+                //worldPoint.y = Mathf.Clamp(worldPoint.y, 0.1f, Mathf.Infinity);
                 grid[x, y] = new Node(walkable, worldPoint, x, y, height, movementPenalty);
+                DrawGrid(grid[x, y]);
             }
         }
     }
@@ -114,6 +118,8 @@ public class Grid : MonoBehaviour
         int y = Mathf.RoundToInt((gridSizeY - 1) * percentY);
         return grid[x, y];
     }
+
+    public virtual void DrawGrid(Node node) { }
 
     void OnDrawGizmos()
     {

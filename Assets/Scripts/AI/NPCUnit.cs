@@ -32,7 +32,6 @@ public class NPCUnit : Unit
                 yield break;
             }else
             {
-                Debug.Log("pos");
                 // Occurs each frame
                 UpdatePosition(currentWaypoint);
                 

@@ -70,6 +70,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Assets\Scripts\AI\Grid.cs" />
+    <Compile Include="Assets\Scripts\AI\GridRepresentation.cs" />
     <Compile Include="Assets\Scripts\AI\Heap.cs" />
     <Compile Include="Assets\Scripts\AI\NPCUnit.cs" />
     <Compile Include="Assets\Scripts\AI\Node.cs" />
