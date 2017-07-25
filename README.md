@@ -9,4 +9,4 @@ Goals:
  
 Stretch Goal:
  - Remove grid size limit and make algorithm build grid only around units based in a larger world container. 
-     -- Have grid build using varying grid block sizes on low to high precision based on locality. e.g. if target is far away we only need an approximate area of low density to locate. As we move closer increase precision.
+ - Have grid build using varying grid block sizes on low to high precision based on locality. e.g. if target is far away we only need an approximate area of low density to locate. As we move closer increase precision.
