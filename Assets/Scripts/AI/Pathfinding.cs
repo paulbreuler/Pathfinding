@@ -36,6 +36,21 @@ public class Pathfinding : MonoBehaviour
         Node startNode = grid.NodeFromWorldPoint(startPos);
         Node targetNode = grid.NodeFromWorldPoint(targetPos);
 
+        
+        // if starting node is not reachable try to move to an adjacent node. 
+        if (!startNode.walkable)
+        {
+            List<Node> neighbors = grid.GetNeighbours(startNode);
+            foreach(Node n in neighbors)
+            {
+                if (n.walkable) { 
+                    startNode = n;
+                    break;
+                 }
+                
+            }
+        }
+
         // Only execute if both source and target are reachable
         if (startNode.walkable && targetNode.walkable)
         {

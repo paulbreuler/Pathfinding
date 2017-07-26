@@ -1,9 +1,11 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 public abstract class Unit : MonoBehaviour
 {
     #region public variables
+    public GameObject Astar;
     public bool drawGizmos = false;
     public float gravity = 9.8f;
     public Transform m_target;
@@ -14,8 +16,14 @@ public abstract class Unit : MonoBehaviour
     public float distanceToWaypoint = 1;
     [Tooltip("Distance to stop before target if target is occupying selected space")]
     public float stopBeforeDistance = 2;
-    public Node lastNodePosition;
     public float collisionDetectionDistance = 2.0f;
+    public Vector2 currentPosition = new Vector2(0, 0);
+    public int spacesMoved = 0;
+    public float period = 0.1f;
+    public float nextActionTime = 1.0f;
+    public bool isSafeToUpdatePath = false;
+    public int pathFoundCount = 0;
+    public bool isMoving = false;
     #endregion
 
     #region member variables
@@ -23,15 +31,21 @@ public abstract class Unit : MonoBehaviour
     protected Vector3[] m_path;
     protected int m_targetIndex;
     protected CharacterController m_characterController;
-
+    private Node lastNodePosition;
+    private List<Node> lastPositionNeighbors;
     private Vector3 m_lastKnownPosition;
     private Quaternion m_lookAtRotation;
     private Grid m_grid;
+    private Coroutine lastRoutine = null;
     #endregion
+
+
+
 
     public virtual void Awake()
     {
-        m_grid = GetComponent<Grid>();
+        if (Astar != null)
+            m_grid = Astar.GetComponent<Grid>();
     }
 
     public virtual void Start()
@@ -47,18 +61,51 @@ public abstract class Unit : MonoBehaviour
 
         DetectRaycastCollision(right);
         DetectRaycastCollision(left);
+
+        Vector3 forward = transform.TransformDirection(Vector3.forward) * collisionDetectionDistance * 3;
+        RaycastHit? isForwardCollision = DetectRaycastCollision(forward);
+
+        if (Time.time > nextActionTime)
+        {
+            nextActionTime += period;
+            isSafeToUpdatePath = true;
+        }
+        else
+        {
+            isSafeToUpdatePath = false;
+        }
+
+        if (isSafeToUpdatePath)
+            UpdateNodePosition();
+
+        if (spacesMoved % 20 == 0 && isSafeToUpdatePath)
+        {
+            lastNodePosition.walkable = true;
+            PathRequestManager.RequestPath(transform.position, m_target.position, OnPathFound);
+        }
+        else if (isForwardCollision != null)
+        {
+            if ((!((RaycastHit)isForwardCollision).transform.gameObject.GetComponent<Unit>().isMoving && isSafeToUpdatePath))
+            {
+                lastNodePosition.walkable = true;
+                PathRequestManager.RequestPath(transform.position, m_target.position, OnPathFound);
+            }
+        }
     }
 
     public virtual void OnPathFound(Vector3[] newPath, bool pathSuccessful)
     {
         if (pathSuccessful)
         {
+            pathFoundCount++;
             m_path = newPath;
             m_targetIndex = 0;
 
             // Stop coroutine if it is already running.
-            StopCoroutine(FollowPath());
-            StartCoroutine(FollowPath());
+            if (lastRoutine != null)
+                StopCoroutine(lastRoutine);
+
+            lastRoutine = StartCoroutine(FollowPath());
         }
     }
 
@@ -74,7 +121,11 @@ public abstract class Unit : MonoBehaviour
 
                 // If we are done with path.
                 if (m_targetIndex >= m_path.Length)
+                {
+                    isMoving = false;
                     yield break;
+                }
+
 
                 currentWaypoint = m_path[m_targetIndex];
             }
@@ -94,9 +145,9 @@ public abstract class Unit : MonoBehaviour
     {
         Vector3 direction = destination - transform.position;
         m_verticalSpeed -= gravity * Time.deltaTime;
-
+        Vector3 movement = new Vector3(0, m_verticalSpeed, 0) + direction.normalized * movementSpeed * Time.deltaTime;
         // Handles steps and other cases by default
-        m_characterController.Move(new Vector3(0, m_verticalSpeed, 0) + direction.normalized * movementSpeed * Time.deltaTime);
+        m_characterController.Move(movement);
         //transform.Translate(direction.normalized * movementSpeed * Time.deltaTime, Space.World);
     }
 
@@ -119,13 +170,41 @@ public abstract class Unit : MonoBehaviour
     /// Set current node to unwalkable.
     /// </summary>
     public void UpdateNodePosition()
-    {        
+    {
         Node node = m_grid.NodeFromWorldPoint(transform.position);
+
+        if (isMoving == false)
+        {
+            lastPositionNeighbors = m_grid.GetNeighbours(node);
+            foreach (Node n in lastPositionNeighbors)
+            {
+                n.walkable = false;
+            }
+            node.walkable = false;
+            lastNodePosition = node;
+            currentPosition = new Vector2(node.gridX, node.gridY);
+            return;
+        }
+
+        if (node.gridX == m_path[0].x && node.gridY == m_path[0].y)
+            return;
+
         if (lastNodePosition != null)
+        {
             lastNodePosition.walkable = true;
+            if (lastPositionNeighbors != null)
+                foreach (Node n in lastPositionNeighbors)
+                {
+                    n.walkable = false;
+                }
+            if (!node.Equals(lastNodePosition))
+                spacesMoved++;
+        }
 
         node.walkable = false;
         lastNodePosition = node;
+        currentPosition = new Vector2(node.gridX, node.gridY);
+
     }
 
     /// <summary>
@@ -175,22 +254,20 @@ public abstract class Unit : MonoBehaviour
         }
     }
 
-    public bool DetectRaycastCollision(Vector3 direction)
+    public RaycastHit? DetectRaycastCollision(Vector3 direction)
     {
-        bool result = false;
         Ray ray = new Ray(transform.position, direction);
         RaycastHit hit;
         if (Physics.Raycast(ray, out hit, collisionDetectionDistance))
         {
             Debug.DrawRay(transform.position, direction, Color.red);
-            result = true;
+            return hit;
         }
         else
         {
             Debug.DrawRay(transform.position, direction, Color.green);
+            return null;
         }
-
-        return result;
     }
 }
 

@@ -66,6 +66,7 @@
      <Compile Include="Assets\Scripts\TurretAI\ShootingSystem.cs" />
      <Compile Include="Assets\Scripts\TurretAI\TrackingSystem.cs" />
      <Compile Include="Assets\Scripts\TurretAI\TurretAI.cs" />
+     <Compile Include="Assets\Scripts\Utility\GridColor.cs" />
      <Compile Include="Assets\Scripts\Utility\MessageHandler.cs" />
      <Compile Include="Assets\Scripts\Utility\RangeChecker.cs" />
  <Reference Include="UnityEngine.UI">

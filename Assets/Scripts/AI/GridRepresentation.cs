@@ -15,6 +15,8 @@ public class GridRepresentation : Grid {
         pos.y += 0.1f;
         GameObject nodeInstance = Instantiate(nodeMesh, pos, transform.rotation) as GameObject;
         nodeInstance.transform.localScale = Vector3.one * (nodeDiameter - 0.1f) * 0.1f;
+        node.NodeMesh = nodeInstance;
+
     }
     
 }

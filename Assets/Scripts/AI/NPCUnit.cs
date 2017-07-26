@@ -23,7 +23,11 @@ public class NPCUnit : Unit
 
                 // If we are done with path.
                 if (m_targetIndex >= m_path.Length)
+                {
+                    isMoving = false;
                     yield break;
+                }
+                    
 
                 currentWaypoint = m_path[m_targetIndex];
             }
@@ -31,10 +35,13 @@ public class NPCUnit : Unit
             // Determine if target space is occupied
             if (StopBeforeTarget(stopBeforeDistance))
             {
+                isMoving = false;
+                m_path = null;
                 yield break;
             }else
             {
                 // Occurs each frame
+                isMoving = true;
                 UpdatePosition(currentWaypoint);
                 
             }

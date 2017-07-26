@@ -4,7 +4,21 @@ using System.Collections;
 public class Node : IHeapItem<Node>
 {
 
-    public bool walkable;
+    private bool m_walkable;
+    public bool walkable
+    {
+        get
+        {
+            return m_walkable;
+        }
+        set
+        {
+            m_walkable = value;
+            if(NodeMesh != null)
+            NodeMesh.GetComponent<GridColor>().UpdateColor(value);
+        }
+        
+    }
     public Vector3 worldPosition;
     public int gridX;
     public int gridY;
@@ -14,6 +28,8 @@ public class Node : IHeapItem<Node>
     public int gCost;
     public int hCost;
     public Node parent;
+
+    public GameObject NodeMesh;
 
     int heapIndex;
 
@@ -58,5 +74,10 @@ public class Node : IHeapItem<Node>
             compare = hCost.CompareTo(nodeToCompare.hCost);
         }
         return -compare;
+    }
+
+    public override bool Equals(object obj)
+    {
+        return worldPosition == ((Node)obj).worldPosition;
     }
 }
