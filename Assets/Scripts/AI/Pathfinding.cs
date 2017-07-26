@@ -21,6 +21,12 @@ public class Pathfinding : MonoBehaviour
         StartCoroutine(FindPath(startPos, targetPos));
     }
 
+    /// <summary>
+    /// Find walkable nodes between startPos and targetPos to form a complete path between the two nodes if they are both in walkable regions.
+    /// </summary>
+    /// <param name="startPos"> Start Position</param>
+    /// <param name="targetPos"> Target Position</param>
+    /// <returns></returns>
     IEnumerator FindPath(Vector3 startPos, Vector3 targetPos)
     {
 
@@ -33,8 +39,11 @@ public class Pathfinding : MonoBehaviour
         // Only execute if both source and target are reachable
         if (startNode.walkable && targetNode.walkable)
         {
+            // Nodes to be explored. Lowest cost first
             Heap<Node> openSet = new Heap<Node>(grid.MaxSize);
+            // Explored nodes
             HashSet<Node> closedSet = new HashSet<Node>();
+
             openSet.Add(startNode);
 
             while (openSet.Count > 0)
@@ -96,8 +105,9 @@ public class Pathfinding : MonoBehaviour
 
         // Reduce path complexity
         Vector3[] waypoints = SimplifyPath(path);
-        Array.Reverse(waypoints);
-        return waypoints;
+        Vector3[] smoothedWaypoints = BezierPath(waypoints, 1.0f);
+        Array.Reverse(smoothedWaypoints);
+        return smoothedWaypoints;
 
     }
 
@@ -128,6 +138,49 @@ public class Pathfinding : MonoBehaviour
             directionOld = directionNew;
         }
         return waypoints.ToArray();
+    }
+
+
+    /// <summary>
+    /// Smooth path using Bezier Spline algorithm.
+    /// Reference: http://answers.unity3d.com/questions/392606/line-drawing-how-can-i-interpolate-between-points.html
+    /// Reference: http://ibiblio.org/e-notes/Splines/Bezier.htm
+    /// Reference: http://catlikecoding.com/unity/tutorials/curves-and-splines/
+    /// </summary>
+    /// <returns> Interpolated path </returns>
+    Vector3[] BezierPath(Vector3[] waypoints, float smoothness)
+    {
+        List<Vector3> points;
+        List<Vector3> smoothedWaypoints;
+        int waypointsLength = 0;
+        int curvedLength = 0;
+
+        if (smoothness < 1.0f) smoothness = 1.0f;
+
+        waypointsLength = waypoints.Length;
+
+        curvedLength = (waypointsLength * Mathf.RoundToInt(smoothness)) - 1;
+        smoothedWaypoints = new List<Vector3>(curvedLength);
+
+        float t = 0.0f;
+        for (int pointInTimeOnCurve = 0; pointInTimeOnCurve < curvedLength + 1; pointInTimeOnCurve++)
+        {
+            t = Mathf.InverseLerp(0, curvedLength, pointInTimeOnCurve);
+
+            points = new List<Vector3>(waypoints);
+
+            for (int j = waypointsLength - 1; j > 0; j--)
+            {
+                for (int i = 0; i < j; i++)
+                {
+                    points[i] = (1 - t) * points[i] + t * points[i + 1];
+                }
+            }
+
+            smoothedWaypoints.Add(points[0]);
+        }
+
+        return (smoothedWaypoints.ToArray());
     }
 
     /// <summary>

@@ -14,6 +14,8 @@ public abstract class Unit : MonoBehaviour
     public float distanceToWaypoint = 1;
     [Tooltip("Distance to stop before target if target is occupying selected space")]
     public float stopBeforeDistance = 2;
+    public Node lastNodePosition;
+    public float collisionDetectionDistance = 2.0f;
     #endregion
 
     #region member variables
@@ -24,12 +26,27 @@ public abstract class Unit : MonoBehaviour
 
     private Vector3 m_lastKnownPosition;
     private Quaternion m_lookAtRotation;
+    private Grid m_grid;
     #endregion
+
+    public virtual void Awake()
+    {
+        m_grid = GetComponent<Grid>();
+    }
 
     public virtual void Start()
     {
         m_characterController = GetComponent<CharacterController>();
         PathRequestManager.RequestPath(transform.position, m_target.position, OnPathFound);
+    }
+
+    public virtual void Update()
+    {
+        Vector3 right = transform.TransformDirection(Vector3.forward + Vector3.right).normalized * collisionDetectionDistance;
+        Vector3 left = transform.TransformDirection(Vector3.forward + Vector3.left).normalized * collisionDetectionDistance;
+
+        DetectRaycastCollision(right);
+        DetectRaycastCollision(left);
     }
 
     public virtual void OnPathFound(Vector3[] newPath, bool pathSuccessful)
@@ -97,6 +114,20 @@ public abstract class Unit : MonoBehaviour
             transform.rotation = Quaternion.RotateTowards(transform.rotation, m_lookAtRotation, rotationSpeed * Time.deltaTime);
     }
 
+
+    /// <summary>
+    /// Set current node to unwalkable.
+    /// </summary>
+    public void UpdateNodePosition()
+    {        
+        Node node = m_grid.NodeFromWorldPoint(transform.position);
+        if (lastNodePosition != null)
+            lastNodePosition.walkable = true;
+
+        node.walkable = false;
+        lastNodePosition = node;
+    }
+
     /// <summary>
     /// Stop before reaching the target.
     /// </summary>
@@ -142,6 +173,24 @@ public abstract class Unit : MonoBehaviour
                 }
             }
         }
+    }
+
+    public bool DetectRaycastCollision(Vector3 direction)
+    {
+        bool result = false;
+        Ray ray = new Ray(transform.position, direction);
+        RaycastHit hit;
+        if (Physics.Raycast(ray, out hit, collisionDetectionDistance))
+        {
+            Debug.DrawRay(transform.position, direction, Color.red);
+            result = true;
+        }
+        else
+        {
+            Debug.DrawRay(transform.position, direction, Color.green);
+        }
+
+        return result;
     }
 }
 

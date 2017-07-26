@@ -4,9 +4,11 @@ using System.Collections;
 public class NPCUnit : Unit
 {
 
-    void Update()
+    public override void Update()
     {
-        UpdateRotation(); 
+        base.Update();
+        UpdateRotation();
+        
     }
 
     public override IEnumerator FollowPath()

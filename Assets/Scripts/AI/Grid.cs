@@ -82,6 +82,11 @@ public class Grid : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Find all nodes around a given node.
+    /// </summary>
+    /// <param name="node"> node whose neighbors are to be found</param>
+    /// <returns></returns>
     public List<Node> GetNeighbours(Node node)
     {
         List<Node> neighbours = new List<Node>();
@@ -106,7 +111,11 @@ public class Grid : MonoBehaviour
         return neighbours;
     }
 
-
+    /// <summary>
+    /// Convert workspace to grid space cartesian coordinates and return node at that point.
+    /// </summary>
+    /// <param name="worldPosition"> Actual position of node in 3D space</param>
+    /// <returns> Node intersecting worldPosition</returns>
     public Node NodeFromWorldPoint(Vector3 worldPosition)
     {
         float percentX = (worldPosition.x + gridWorldSize.x / 2) / gridWorldSize.x;
