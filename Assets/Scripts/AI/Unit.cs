@@ -8,7 +8,8 @@ public abstract class Unit : MonoBehaviour
     public GameObject Astar;
     public bool drawGizmos = false;
     public float gravity = 9.8f;
-    public Transform m_target;
+    public Transform target;
+    public Vector3 lastTargetPosition;
     public float movementSpeed = 20;
     public float rotationSpeed = 85;
     [Tooltip("How close to get to waypoint before moving towards next. Fixes movement bug. " +
@@ -39,9 +40,6 @@ public abstract class Unit : MonoBehaviour
     private Coroutine lastRoutine = null;
     #endregion
 
-
-
-
     public virtual void Awake()
     {
         if (Astar != null)
@@ -51,7 +49,8 @@ public abstract class Unit : MonoBehaviour
     public virtual void Start()
     {
         m_characterController = GetComponent<CharacterController>();
-        PathRequestManager.RequestPath(transform.position, m_target.position, OnPathFound);
+        PathRequestManager.RequestPath(transform.position, target.position, OnPathFound);
+        lastTargetPosition = target.position;
     }
 
     public virtual void Update()
@@ -81,15 +80,19 @@ public abstract class Unit : MonoBehaviour
         if (spacesMoved % 20 == 0 && isSafeToUpdatePath)
         {
             lastNodePosition.walkable = true;
-            PathRequestManager.RequestPath(transform.position, m_target.position, OnPathFound);
+            PathRequestManager.RequestPath(transform.position, target.position, OnPathFound);
         }
         else if (isForwardCollision != null)
         {
             if ((!((RaycastHit)isForwardCollision).transform.gameObject.GetComponent<Unit>().isMoving && isSafeToUpdatePath))
             {
                 lastNodePosition.walkable = true;
-                PathRequestManager.RequestPath(transform.position, m_target.position, OnPathFound);
+                PathRequestManager.RequestPath(transform.position, target.position, OnPathFound);
             }
+        }else if (target.position != lastTargetPosition && isSafeToUpdatePath)
+        {
+            lastNodePosition.walkable = true;
+            PathRequestManager.RequestPath(transform.position, target.position, OnPathFound);
         }
     }
 
@@ -156,7 +159,7 @@ public abstract class Unit : MonoBehaviour
     /// </summary>
     public virtual void UpdateRotation()
     {
-        m_lastKnownPosition = m_target.transform.position;
+        m_lastKnownPosition = target.transform.position;
         m_lookAtRotation = Quaternion.LookRotation(m_lastKnownPosition - transform.position);
         //m_lookAtRotation.y = 0; removing Y breaks rotation. Probably has to do with conversion to quaternion.
 
@@ -218,7 +221,7 @@ public abstract class Unit : MonoBehaviour
         // TODO Ray should be at eye level
         Ray ray = new Ray(transform.position, transform.forward);
         RaycastHit hit;
-        if (Physics.Raycast(ray, out hit, distance) && hit.transform == m_target)
+        if (Physics.Raycast(ray, out hit, distance) && hit.transform == target)
         {
             Debug.DrawLine(transform.position, hit.point, Color.red, 5);
             result = true;
