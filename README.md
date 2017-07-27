@@ -1,5 +1,5 @@
 # Pathfinding
-A* pathfinding on a dynamic grid.
+SEE WIKI FOR MORE INFO
 
 This is an opensource project that is a personal exploration of A* for grid based pathfinding. I'm working on this as part of hackathons and free time as a way to continue exploring my passion outside of my day job.
 
