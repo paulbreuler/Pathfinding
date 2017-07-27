@@ -2,16 +2,18 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class DemoAI : MonoBehaviour {
+public class DemoAI : MonoBehaviour
+{
 
     public GameObject player;
     private Vector3 playerLastPos;
 
     public GameObject[] Seekers;
+    public GameObject[] respawn;
     Grid m_grid;
 
     private void Start()
-    {        
+    {
         player = GameObject.FindGameObjectWithTag("Player");
         playerLastPos = player.transform.position;
 
@@ -20,10 +22,11 @@ public class DemoAI : MonoBehaviour {
     }
 
     // Update is called once per frame
-    void Update () {
-		if(Input.GetKeyUp(KeyCode.Space))
+    void Update()
+    {
+        if (Input.GetKeyUp(KeyCode.Space))
         {
-            foreach(GameObject s in Seekers)
+            foreach (GameObject s in Seekers)
             {
                 int numX = (int)Random.Range(0, m_grid.gridWorldSize.x);
                 int numY = (int)Random.Range(0, m_grid.gridWorldSize.y);
@@ -33,18 +36,27 @@ public class DemoAI : MonoBehaviour {
             }
         }
 
-        if(player.transform.position != playerLastPos)
+        if (player.transform.position != playerLastPos)
         {
             playerLastPos = player.transform.position;
             SetBackToMainTarget();
         }
 
-	}
+
+        if (Input.GetKeyUp(KeyCode.R))
+        {
+            foreach (GameObject s in Seekers)
+            {
+                StartCoroutine(RespawnAI(s));
+            }
+
+        }
+    }
 
     public void SetBackToMainTarget()
     {
         foreach (GameObject s in Seekers)
-        {            
+        {
             s.GetComponent<Unit>().target = player.transform;
         }
     }
@@ -53,6 +65,23 @@ public class DemoAI : MonoBehaviour {
     {
         yield return new WaitForSeconds(5);
         n.NodeMesh.GetComponent<GridColor>().UpdateColor(Walkable.Passable);
+    }
+
+    IEnumerator RespawnAI(GameObject go)
+    {
+        yield return new WaitForSeconds(0.2f);
+        go.transform.position = respawn[Random.Range(0, respawn.Length)].transform.position;
+        foreach(Node n in GetComponent<Grid>().grid)
+        {
+            if(n.walkable != Walkable.Impassable)
+            {
+                n.walkable = Walkable.Passable;
+            }
+        }
+        go.GetComponent<Unit>().isMoving = true;
+        go.GetComponent<Unit>().UpdatePath();
 
     }
+
+
 }
