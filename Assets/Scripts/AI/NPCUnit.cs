@@ -8,12 +8,18 @@ public class NPCUnit : Unit
     {
         base.Update();
         UpdateRotation();
-        
+
     }
 
     public override IEnumerator FollowPath()
     {
-        Vector3 currentWaypoint = m_path[0];
+        //TODO: Fails here with index out of range when rapidly changing paths
+        Vector3 currentWaypoint;
+        if (m_path != null && m_path.Length > 0)
+            currentWaypoint = m_path[0];
+        else
+            currentWaypoint = transform.position;
+
         while (true)
         {
 
@@ -27,27 +33,28 @@ public class NPCUnit : Unit
                     isMoving = false;
                     yield break;
                 }
-                    
+
 
                 currentWaypoint = m_path[m_targetIndex];
             }
 
             Vector3 forward = transform.TransformDirection(Vector3.forward) * stopBeforeDistance;
-            RaycastHit? isForwardCollision = DetectRaycastCollision(forward);
+            RaycastHit? isForwardCollision = DetectRaycastCollision(forward, transform.position, collisionDetectionDistance);
             // Determine if target space is occupied
-            if (isForwardCollision != null && ((RaycastHit)isForwardCollision).transform == target )
+            if (isForwardCollision != null && ((RaycastHit)isForwardCollision).transform == target)
             {
                 isMoving = false;
                 m_path = null;
                 yield break;
-            }else
+            }
+            else
             {
                 // Occurs each frame
                 isMoving = true;
                 UpdatePosition(currentWaypoint);
-                
+
             }
-            
+
             yield return null;
 
         } // End While

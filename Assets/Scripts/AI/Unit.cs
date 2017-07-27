@@ -25,6 +25,7 @@ public abstract class Unit : MonoBehaviour
     public bool isSafeToUpdatePath = false;
     public int pathFoundCount = 0;
     public bool isMoving = false;
+    public int jumpSpeed = 1;
     #endregion
 
     #region member variables
@@ -58,11 +59,11 @@ public abstract class Unit : MonoBehaviour
         Vector3 right = transform.TransformDirection(Vector3.forward + Vector3.right).normalized * collisionDetectionDistance;
         Vector3 left = transform.TransformDirection(Vector3.forward + Vector3.left).normalized * collisionDetectionDistance;
 
-        DetectRaycastCollision(right);
-        DetectRaycastCollision(left);
+        DetectRaycastCollision(right, transform.position, collisionDetectionDistance);
+        DetectRaycastCollision(left, transform.position, collisionDetectionDistance);
 
         Vector3 forward = transform.TransformDirection(Vector3.forward) * collisionDetectionDistance;
-        RaycastHit? isForwardCollision = DetectRaycastCollision(forward);
+        RaycastHit? isForwardCollision = DetectRaycastCollision(forward, transform.position, collisionDetectionDistance);
 
         if (Time.time > nextActionTime)
         {
@@ -96,6 +97,18 @@ public abstract class Unit : MonoBehaviour
         }
 
         lastTargetPosition = target.position;
+
+        // Jump obstacle
+        Vector3 lowerForward = transform.TransformDirection(Vector3.forward) * collisionDetectionDistance;
+        RaycastHit? islowerForwardCollision = DetectRaycastCollision(lowerForward, (transform.position + new Vector3(0, -0.5f, 0)), collisionDetectionDistance);
+        if (islowerForwardCollision != null)
+        {
+            if (m_characterController.isGrounded && ((RaycastHit)islowerForwardCollision).transform.tag == "Jumpable")
+            {
+                m_verticalSpeed = jumpSpeed;
+
+            }
+        }
     }
 
     public void UpdatePath()
@@ -253,18 +266,18 @@ public abstract class Unit : MonoBehaviour
         }
     }
 
-    public RaycastHit? DetectRaycastCollision(Vector3 direction)
+    public RaycastHit? DetectRaycastCollision(Vector3 direction, Vector3 position, float distance)
     {
-        Ray ray = new Ray(transform.position, direction);
+        Ray ray = new Ray(position, direction);
         RaycastHit hit;
-        if (Physics.Raycast(ray, out hit, collisionDetectionDistance))
+        if (Physics.Raycast(ray, out hit, distance))
         {
-            Debug.DrawRay(transform.position, direction, Color.red);
+            Debug.DrawRay(position, direction, Color.red);
             return hit;
         }
         else
         {
-            Debug.DrawRay(transform.position, direction, Color.green);
+            Debug.DrawRay(position, direction, Color.green);
             return null;
         }
     }

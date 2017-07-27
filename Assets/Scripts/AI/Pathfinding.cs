@@ -165,6 +165,9 @@ public class Pathfinding : MonoBehaviour
     /// <returns> Interpolated path </returns>
     Vector3[] BezierPath(Vector3[] waypoints, float smoothness)
     {
+        if (waypoints.Length <= 1)
+            return waypoints;
+
         List<Vector3> points;
         List<Vector3> smoothedWaypoints;
         int waypointsLength = 0;
