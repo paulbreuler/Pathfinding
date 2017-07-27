@@ -1,7 +1,8 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class GridRepresentation : Grid {
+public class GridRepresentation : Grid
+{
 
     public GameObject nodeMesh;
 
@@ -16,7 +17,10 @@ public class GridRepresentation : Grid {
         GameObject nodeInstance = Instantiate(nodeMesh, pos, transform.rotation) as GameObject;
         nodeInstance.transform.localScale = Vector3.one * (nodeDiameter - 0.1f) * 0.1f;
         node.NodeMesh = nodeInstance;
-
+        if (node.NodeMesh.GetComponent<GridColor>())
+        {
+            node.NodeMesh.GetComponent<GridColor>().UpdateColor(node.walkable);
+        }
     }
-    
+
 }

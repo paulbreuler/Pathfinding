@@ -38,12 +38,12 @@ public class Pathfinding : MonoBehaviour
 
         
         // if starting node is not reachable try to move to an adjacent node. 
-        if (!startNode.walkable)
+        if (startNode.walkable != Walkable.Passable)
         {
             List<Node> neighbors = grid.GetNeighbours(startNode);
             foreach(Node n in neighbors)
             {
-                if (n.walkable) { 
+                if (n.walkable == Walkable.Passable) { 
                     startNode = n;
                     break;
                  }
@@ -52,7 +52,7 @@ public class Pathfinding : MonoBehaviour
         }
 
         // Only execute if both source and target are reachable
-        if (startNode.walkable && targetNode.walkable)
+        if (startNode.walkable == Walkable.Passable && targetNode.walkable == Walkable.Passable)
         {
             // Nodes to be explored. Lowest cost first
             Heap<Node> openSet = new Heap<Node>(grid.MaxSize);
@@ -74,7 +74,7 @@ public class Pathfinding : MonoBehaviour
 
                 foreach (Node neighbour in grid.GetNeighbours(currentNode))
                 {
-                    if (!neighbour.walkable || closedSet.Contains(neighbour))
+                    if (neighbour.walkable != Walkable.Passable || closedSet.Contains(neighbour))
                     {
                         continue;
                     }

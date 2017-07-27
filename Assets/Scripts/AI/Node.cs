@@ -1,11 +1,13 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+public enum Walkable { Blocked, Passable, Impassable };
+
 public class Node : IHeapItem<Node>
 {
 
-    private bool m_walkable;
-    public bool walkable
+    private Walkable m_walkable;
+    public Walkable walkable
     {
         get
         {
@@ -33,7 +35,7 @@ public class Node : IHeapItem<Node>
 
     int heapIndex;
 
-    public Node(bool _walkable, Vector3 _worldPos, int _gridX, int _gridY,float _height, int _penalty)
+    public Node(Walkable _walkable, Vector3 _worldPos, int _gridX, int _gridY,float _height, int _penalty)
     {
         walkable = _walkable;
         worldPosition = _worldPos;

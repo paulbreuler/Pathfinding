@@ -32,8 +32,10 @@ public class NPCUnit : Unit
                 currentWaypoint = m_path[m_targetIndex];
             }
 
+            Vector3 forward = transform.TransformDirection(Vector3.forward) * stopBeforeDistance;
+            RaycastHit? isForwardCollision = DetectRaycastCollision(forward);
             // Determine if target space is occupied
-            if (StopBeforeTarget(stopBeforeDistance))
+            if (isForwardCollision != null && ((RaycastHit)isForwardCollision).transform == target )
             {
                 isMoving = false;
                 m_path = null;

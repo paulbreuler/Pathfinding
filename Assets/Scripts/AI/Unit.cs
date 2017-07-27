@@ -61,7 +61,7 @@ public abstract class Unit : MonoBehaviour
         DetectRaycastCollision(right);
         DetectRaycastCollision(left);
 
-        Vector3 forward = transform.TransformDirection(Vector3.forward) * collisionDetectionDistance * 3;
+        Vector3 forward = transform.TransformDirection(Vector3.forward) * collisionDetectionDistance;
         RaycastHit? isForwardCollision = DetectRaycastCollision(forward);
 
         if (Time.time > nextActionTime)
@@ -79,21 +79,29 @@ public abstract class Unit : MonoBehaviour
 
         if (spacesMoved % 20 == 0 && isSafeToUpdatePath)
         {
-            lastNodePosition.walkable = true;
-            PathRequestManager.RequestPath(transform.position, target.position, OnPathFound);
+            UpdatePath();
         }
-        else if (isForwardCollision != null)
+        else if (isForwardCollision != null && ((RaycastHit)isForwardCollision).transform.gameObject.GetComponent<Unit>() != null)
         {
             if ((!((RaycastHit)isForwardCollision).transform.gameObject.GetComponent<Unit>().isMoving && isSafeToUpdatePath))
             {
-                lastNodePosition.walkable = true;
-                PathRequestManager.RequestPath(transform.position, target.position, OnPathFound);
+                UpdatePath();
             }
-        }else if (target.position != lastTargetPosition && isSafeToUpdatePath)
-        {
-            lastNodePosition.walkable = true;
-            PathRequestManager.RequestPath(transform.position, target.position, OnPathFound);
         }
+        else if (target.position != lastTargetPosition)
+        {
+            isMoving = true;
+            UpdateNodePosition();
+            UpdatePath();
+        }
+
+        lastTargetPosition = target.position;
+    }
+
+    public void UpdatePath()
+    {
+        lastNodePosition.walkable = Walkable.Passable;
+        PathRequestManager.RequestPath(transform.position, target.position, OnPathFound);
     }
 
     public virtual void OnPathFound(Vector3[] newPath, bool pathSuccessful)
@@ -146,9 +154,13 @@ public abstract class Unit : MonoBehaviour
     /// <param name="destination"> Target to be moved towards </param>
     public virtual void UpdatePosition(Vector3 destination)
     {
+        Node node = m_grid.NodeFromWorldPoint(transform.position);
+
         Vector3 direction = destination - transform.position;
-        m_verticalSpeed -= gravity * Time.deltaTime;
-        Vector3 movement = new Vector3(0, m_verticalSpeed, 0) + direction.normalized * movementSpeed * Time.deltaTime;
+        m_verticalSpeed -= Mathf.Clamp(gravity * Time.deltaTime, 0, 30);
+
+        float penalty = node.movementPenalty == 0 ? 1 : node.movementPenalty;
+        Vector3 movement = new Vector3(0, m_verticalSpeed, 0) + direction.normalized * movementSpeed * (100-penalty)/100 * Time.deltaTime;
         // Handles steps and other cases by default
         m_characterController.Move(movement);
         //transform.Translate(direction.normalized * movementSpeed * Time.deltaTime, Space.World);
@@ -181,53 +193,37 @@ public abstract class Unit : MonoBehaviour
             lastPositionNeighbors = m_grid.GetNeighbours(node);
             foreach (Node n in lastPositionNeighbors)
             {
-                n.walkable = false;
+                if (n.walkable != Walkable.Impassable)
+                    n.walkable = Walkable.Blocked;
             }
-            node.walkable = false;
+            node.walkable = Walkable.Blocked;
             lastNodePosition = node;
             currentPosition = new Vector2(node.gridX, node.gridY);
             return;
         }
 
-        if (node.gridX == m_path[0].x && node.gridY == m_path[0].y)
-            return;
-
-        if (lastNodePosition != null)
+        if (lastNodePosition != null && isMoving)
         {
-            lastNodePosition.walkable = true;
+            lastPositionNeighbors = m_grid.GetNeighbours(node);
+            lastNodePosition.walkable = Walkable.Passable;
             if (lastPositionNeighbors != null)
                 foreach (Node n in lastPositionNeighbors)
                 {
-                    n.walkable = false;
+                    if (n.walkable != Walkable.Impassable)
+                        n.walkable = Walkable.Passable;
                 }
             if (!node.Equals(lastNodePosition))
                 spacesMoved++;
         }
-
-        node.walkable = false;
-        lastNodePosition = node;
-        currentPosition = new Vector2(node.gridX, node.gridY);
-
-    }
-
-    /// <summary>
-    /// Stop before reaching the target.
-    /// </summary>
-    /// <returns>true if target is within distance</returns>
-    protected bool StopBeforeTarget(float distance)
-    {
-        bool result = false;
-
-        // TODO Ray should be at eye level
-        Ray ray = new Ray(transform.position, transform.forward);
-        RaycastHit hit;
-        if (Physics.Raycast(ray, out hit, distance) && hit.transform == target)
+        else
         {
-            Debug.DrawLine(transform.position, hit.point, Color.red, 5);
-            result = true;
+            node.walkable = Walkable.Blocked;
+            lastNodePosition = node;
+            currentPosition = new Vector2(node.gridX, node.gridY);
         }
 
-        return result;
+
+
     }
 
     /// <summary>

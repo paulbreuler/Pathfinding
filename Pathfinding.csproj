@@ -86,6 +86,9 @@
     <Compile Include="Assets\Scripts\AI\Pathfinding.cs" />
     <Compile Include="Assets\Scripts\AI\PathRequestManager.cs" />
     <Compile Include="Assets\Scripts\AI\Unit.cs" />
+    <Compile Include="Assets\Scripts\Demo\CameraMovement.cs" />
+    <Compile Include="Assets\Scripts\Demo\DemoAI.cs" />
+    <Compile Include="Assets\Scripts\Demo\MoveTarget.cs" />
     <Compile Include="Assets\Scripts\Health\Death.cs" />
     <Compile Include="Assets\Scripts\Health\Health.cs" />
     <Compile Include="Assets\Scripts\Projectile\ProjectileBase.cs" />

@@ -10,7 +10,7 @@ public class GridColor : MonoBehaviour
 
     private Renderer rend;
     // Use this for initialization
-    void Start()
+    void Awake()
     {
         rend = GetComponent<Renderer>();
         defaultColor = new Color();
@@ -24,9 +24,9 @@ public class GridColor : MonoBehaviour
 
     }
 
-    public void UpdateColor(bool isWalkable)
+    public void UpdateColor(Walkable isWalkable)
     {
-        if (isWalkable)
+        if (isWalkable == Walkable.Passable)
         {
             rend.material.color = defaultColor;
         }

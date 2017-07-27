@@ -49,3 +49,6 @@ Temporary Items
 /Library
 /Temp
 /Build
+/obj
+obj/Debug/DesignTimeResolveAssemblyReferencesInput.cache
+obj/Debug/CoreCompileInputs.cache

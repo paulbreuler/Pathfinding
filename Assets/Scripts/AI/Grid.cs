@@ -15,10 +15,10 @@ public class Grid : MonoBehaviour
     LayerMask walkableMask;
     Dictionary<int, int> walkableRegionsDictionary = new Dictionary<int, int>();
 
-    Node[,] grid;
+    public Node[,] grid;
 
     protected float nodeDiameter;
-    int gridSizeX, gridSizeY;
+    protected int gridSizeX, gridSizeY;
 
     void Awake()
     {
@@ -75,8 +75,12 @@ public class Grid : MonoBehaviour
                     }
                 }
 
+                Walkable walkableEnum = Walkable.Passable;
+                if (!walkable)
+                    walkableEnum = Walkable.Impassable;
+
                 //worldPoint.y = Mathf.Clamp(worldPoint.y, 0.1f, Mathf.Infinity);
-                grid[x, y] = new Node(walkable, worldPoint, x, y, height, movementPenalty);
+                grid[x, y] = new Node(walkableEnum, worldPoint, x, y, height, movementPenalty);
                 DrawGrid(grid[x, y]);
             }
         }
@@ -137,7 +141,7 @@ public class Grid : MonoBehaviour
         {
             foreach (Node n in grid)
             {
-                Gizmos.color = (n.walkable) ? Color.white : Color.red;
+                Gizmos.color = (n.walkable == Walkable.Passable) ? Color.white : Color.red;
                 Gizmos.DrawCube(n.worldPosition, Vector3.one * (nodeDiameter - .1f));
             }
         }
