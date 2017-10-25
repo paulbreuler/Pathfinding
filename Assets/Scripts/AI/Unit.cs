@@ -75,7 +75,8 @@ public abstract class Unit : MonoBehaviour
             isSafeToUpdatePath = false;
         }
 
-        if (isSafeToUpdatePath)
+        // If we don't check !isMoving the AI may get stuck waiting to update the grid for nextActionTime.
+        if (isSafeToUpdatePath || (!isMoving))
             UpdateNodePosition();
 
         if (spacesMoved % 20 == 0 && isSafeToUpdatePath)
