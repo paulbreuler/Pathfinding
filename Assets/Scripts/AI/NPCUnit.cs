@@ -44,6 +44,7 @@ public class NPCUnit : Unit
             if (isForwardCollision != null && ((RaycastHit)isForwardCollision).transform == target)
             {
                 isMoving = false;
+                isTargetReached = true;
                 m_path = null;
                 yield break;
             }
@@ -51,6 +52,7 @@ public class NPCUnit : Unit
             {
                 // Occurs each frame
                 isMoving = true;
+                isTargetReached = false;
                 UpdatePosition(currentWaypoint);
 
             }

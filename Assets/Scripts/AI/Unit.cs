@@ -20,11 +20,13 @@ public abstract class Unit : MonoBehaviour
     public float collisionDetectionDistance = 2.0f;
     public Vector2 currentPosition = new Vector2(0, 0);
     public int spacesMoved = 0;
-    public float period = 0.1f;
-    public float nextActionTime = 1.0f;
+    // Default action times to 5 second interval
+    public float period = 5f;
+    public float nextActionTime = 5f;
     public bool isSafeToUpdatePath = false;
     public int pathFoundCount = 0;
     public bool isMoving = false;
+    public bool isTargetReached = false;
     public int jumpSpeed = 1;
     #endregion
 
@@ -39,6 +41,7 @@ public abstract class Unit : MonoBehaviour
     private Quaternion m_lookAtRotation;
     private Grid m_grid;
     private Coroutine lastRoutine = null;
+    private bool preventExtraNodeUpdate = false;
     #endregion
 
     public virtual void Awake()
@@ -76,8 +79,11 @@ public abstract class Unit : MonoBehaviour
         }
 
         // If we don't check !isMoving the AI may get stuck waiting to update the grid for nextActionTime.
-        if (isSafeToUpdatePath || (!isMoving))
+        if (isSafeToUpdatePath || (!isMoving && isTargetReached && !preventExtraNodeUpdate))
+        {
+            preventExtraNodeUpdate = true;
             UpdateNodePosition();
+        }
 
         if (spacesMoved % 20 == 0 && isSafeToUpdatePath)
         {
@@ -218,6 +224,7 @@ public abstract class Unit : MonoBehaviour
 
         if (lastNodePosition != null && isMoving)
         {
+            preventExtraNodeUpdate = false;
             lastPositionNeighbors = m_grid.GetNeighbours(node);
             lastNodePosition.walkable = Walkable.Passable;
             if (lastPositionNeighbors != null)
