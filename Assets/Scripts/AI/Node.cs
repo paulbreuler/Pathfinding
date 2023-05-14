@@ -8,10 +8,7 @@ public class Node : IHeapItem<Node>
     private Walkable _mWalkable;
     public Walkable Walkable
     {
-        get
-        {
-            return _mWalkable;
-        }
+        get => _mWalkable;
         set
         {
             _mWalkable = value;
@@ -24,15 +21,13 @@ public class Node : IHeapItem<Node>
     public readonly int GridX;
     public readonly int GridY;
     public float Height;
-    public int MovementPenalty;
+    public readonly int MovementPenalty;
 
     public int GCost;
     public int HCost;
     public Node Parent;
 
     public GameObject NodeMesh;
-
-    private int _heapIndex;
 
     public Node(Walkable walkable, Vector3 worldPos, int gridX, int gridY,float height, int penalty)
     {
@@ -44,25 +39,9 @@ public class Node : IHeapItem<Node>
         MovementPenalty = penalty;
     }
 
-    public int FCost
-    {
-        get
-        {
-            return GCost + HCost;
-        }
-    }
+    public int FCost => GCost + HCost;
 
-    public int HeapIndex
-    {
-        get
-        {
-            return _heapIndex;
-        }
-        set
-        {
-            _heapIndex = value;
-        }
-    }
+    public int HeapIndex { get; set; }
 
     public int CompareTo(Node nodeToCompare)
     {

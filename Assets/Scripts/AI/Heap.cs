@@ -3,7 +3,7 @@
 /// <summary>
 /// Generic heap.
 /// 
-/// ** Where T implements IHeapItem<t> garauntees that we can sort the item.
+/// ** Where T implements IHeapItem<t> guarantees that we can sort the item.
 /// </summary>
 /// <typeparam name="T"></typeparam>
 public class Heap<T> where T : IHeapItem<T>
@@ -11,16 +11,16 @@ public class Heap<T> where T : IHeapItem<T>
     /// <summary>
     /// The heap
     /// </summary>
-    private T[] m_items;
+    private readonly T[] _items;
 
     /// <summary>
     /// Number of items in the heap
     /// </summary>
-    private int m_currentItemCount;
+    private int _currentItemCount;
 
     public Heap(int maxHeapSize)
     {
-        m_items = new T[maxHeapSize];
+        _items = new T[maxHeapSize];
     }
 
     /// <summary>
@@ -29,10 +29,10 @@ public class Heap<T> where T : IHeapItem<T>
     /// <param name="item"> Item to add to heap </param>
     public void Add(T item)
     {
-        item.HeapIndex = m_currentItemCount;
-        m_items[m_currentItemCount] = item;
+        item.HeapIndex = _currentItemCount;
+        _items[_currentItemCount] = item;
         SortUp(item);
-        m_currentItemCount++;
+        _currentItemCount++;
     }
 
 
@@ -43,15 +43,15 @@ public class Heap<T> where T : IHeapItem<T>
     public T RemoveFirst()
     {
         // Remove first item and reduce heap count.
-        var firstItem = m_items[0];
-        m_currentItemCount--;
+        var firstItem = _items[0];
+        _currentItemCount--;
 
         // Take last item and make it first
-        m_items[0] = m_items[m_currentItemCount];
-        m_items[0].HeapIndex = 0;
+        _items[0] = _items[_currentItemCount];
+        _items[0].HeapIndex = 0;
 
         // Sort item down to maintain order
-        SortDown(m_items[0]);
+        SortDown(_items[0]);
 
         return firstItem;
     }
@@ -70,13 +70,13 @@ public class Heap<T> where T : IHeapItem<T>
     {
         get
         {
-            return m_currentItemCount;
+            return _currentItemCount;
         }
     }
 
     public bool Contains(T item)
     {
-        return Equals(m_items[item.HeapIndex], item);
+        return Equals(_items[item.HeapIndex], item);
     }
 
     /// <summary>
@@ -89,28 +89,27 @@ public class Heap<T> where T : IHeapItem<T>
         {
             var childIndexLeft = item.HeapIndex * 2 + 1;    // 2n + 1
             var childIndexRight = item.HeapIndex * 2 + 2;   // 2n + 2
-            var swapIndex = 0;
 
             // Does this item have a child on the left. Set to left by default.
-            if (childIndexLeft < m_currentItemCount)
+            if (childIndexLeft < _currentItemCount)
             {
-                swapIndex = childIndexLeft;
+                var swapIndex = childIndexLeft;
 
                 // Does this item have a child on the right?
-                if (childIndexRight < m_currentItemCount)
+                if (childIndexRight < _currentItemCount)
                 {
 
                     // Which child has the highest priority
-                    if (m_items[childIndexLeft].CompareTo(m_items[childIndexRight]) < 0)
+                    if (_items[childIndexLeft].CompareTo(_items[childIndexRight]) < 0)
                     {
                         swapIndex = childIndexRight;
                     }
                 }
 
                 // If the parent is lower priority then swap.
-                if (item.CompareTo(m_items[swapIndex]) < 0)
+                if (item.CompareTo(_items[swapIndex]) < 0)
                 {
-                    Swap(item, m_items[swapIndex]);
+                    Swap(item, _items[swapIndex]);
                 }
                 else
                 {
@@ -139,7 +138,7 @@ public class Heap<T> where T : IHeapItem<T>
 
         while (true)
         {
-            var parentItem = m_items[parentIndex];
+            var parentItem = _items[parentIndex];
             if (item.CompareTo(parentItem) > 0)
             {
                 Swap(item, parentItem);
@@ -160,8 +159,8 @@ public class Heap<T> where T : IHeapItem<T>
     /// <param name="itemB"></param>
     void Swap(T itemA, T itemB)
     {
-        m_items[itemA.HeapIndex] = itemB;
-        m_items[itemB.HeapIndex] = itemA;
+        _items[itemA.HeapIndex] = itemB;
+        _items[itemB.HeapIndex] = itemA;
         var itemAIndex = itemA.HeapIndex;
         itemA.HeapIndex = itemB.HeapIndex;
         itemB.HeapIndex = itemAIndex;

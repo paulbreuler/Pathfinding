@@ -14,7 +14,7 @@ public class GridRepresentation : Grid
         //pos.y /= terrainOffset - 0.1f;
         pos.y += 0.1f;
         var nodeInstance = Instantiate(nodeMesh, pos, transform.rotation) as GameObject;
-        nodeInstance.transform.localScale = Vector3.one * (nodeDiameter - 0.1f) * 0.1f;
+        nodeInstance.transform.localScale = Vector3.one * (NodeDiameter - 0.1f) * 0.1f;
         node.NodeMesh = nodeInstance;
         if (node.NodeMesh.GetComponent<GridColor>())
         {

@@ -2,17 +2,17 @@
 using System.Collections;
 using System.Collections.Generic;
 using System;
+using System.Linq;
 
 public class Pathfinding : MonoBehaviour
 {
+    private PathRequestManager _requestManager;
+    private Grid _grid;
 
-    PathRequestManager requestManager;
-    Grid grid;
-
-    void Awake()
+    private void Awake()
     {
-        requestManager = GetComponent<PathRequestManager>();
-        grid = GetComponent<Grid>();
+        _requestManager = GetComponent<PathRequestManager>();
+        _grid = GetComponent<Grid>();
     }
 
 
@@ -27,27 +27,23 @@ public class Pathfinding : MonoBehaviour
     /// <param name="startPos"> Start Position</param>
     /// <param name="targetPos"> Target Position</param>
     /// <returns></returns>
-    IEnumerator FindPath(Vector3 startPos, Vector3 targetPos)
+    private IEnumerator FindPath(Vector3 startPos, Vector3 targetPos)
     {
-
-        var waypoints = new Vector3[0];
+        var waypoints = Array.Empty<Vector3>();
         var pathSuccess = false;
 
-        var startNode = grid.NodeFromWorldPoint(startPos);
-        var targetNode = grid.NodeFromWorldPoint(targetPos);
+        var startNode = _grid.NodeFromWorldPoint(startPos);
+        var targetNode = _grid.NodeFromWorldPoint(targetPos);
 
-        
+
         // if starting node is not reachable try to move to an adjacent node. 
         if (startNode.Walkable != Walkable.Passable)
         {
-            var neighbors = grid.GetNeighbours(startNode);
-            foreach(var n in neighbors)
+            var neighbors = _grid.GetNeighbours(startNode);
+            foreach (var n in neighbors.Where(n => n.Walkable == Walkable.Passable))
             {
-                if (n.Walkable == Walkable.Passable) { 
-                    startNode = n;
-                    break;
-                 }
-                
+                startNode = n;
+                break;
             }
         }
 
@@ -55,7 +51,7 @@ public class Pathfinding : MonoBehaviour
         if (startNode.Walkable == Walkable.Passable && targetNode.Walkable == Walkable.Passable)
         {
             // Nodes to be explored. Lowest cost first
-            var openSet = new Heap<Node>(grid.MaxSize);
+            var openSet = new Heap<Node>(_grid.MaxSize);
             // Explored nodes
             var closedSet = new HashSet<Node>();
 
@@ -66,20 +62,21 @@ public class Pathfinding : MonoBehaviour
                 var currentNode = openSet.RemoveFirst();
                 closedSet.Add(currentNode);
 
-                if (currentNode == targetNode)
+                if (currentNode.Equals(targetNode))
                 {
                     pathSuccess = true;
                     break;
                 }
 
-                foreach (var neighbour in grid.GetNeighbours(currentNode))
+                foreach (var neighbour in _grid.GetNeighbours(currentNode))
                 {
                     if (neighbour.Walkable != Walkable.Passable || closedSet.Contains(neighbour))
                     {
                         continue;
                     }
 
-                    var newMovementCostToNeighbour = currentNode.GCost + GetDistance(currentNode, neighbour)  + neighbour.MovementPenalty;
+                    var newMovementCostToNeighbour = currentNode.GCost + GetDistance(currentNode, neighbour) +
+                                                     neighbour.MovementPenalty;
                     if (newMovementCostToNeighbour < neighbour.GCost || !openSet.Contains(neighbour))
                     {
                         neighbour.GCost = newMovementCostToNeighbour;
@@ -92,13 +89,14 @@ public class Pathfinding : MonoBehaviour
                 }
             }
         }
+
         yield return null;
         if (pathSuccess)
         {
             waypoints = RetracePath(startNode, targetNode);
         }
-        requestManager.FinishedProcessingPath(waypoints, pathSuccess);
 
+        _requestManager.FinishedProcessingPath(waypoints, pathSuccess);
     }
 
     /// <summary>
@@ -107,7 +105,7 @@ public class Pathfinding : MonoBehaviour
     /// <param name="startNode"></param>
     /// <param name="endNode"></param>
     /// <returns> Walkable path</returns>
-    Vector3[] RetracePath(Node startNode, Node endNode)
+    private static Vector3[] RetracePath(Node startNode, Node endNode)
     {
         var path = new List<Node>();
         var currentNode = endNode;
@@ -123,7 +121,6 @@ public class Pathfinding : MonoBehaviour
         var smoothedWaypoints = BezierPath(waypoints, 1.0f);
         Array.Reverse(smoothedWaypoints);
         return smoothedWaypoints;
-
     }
 
 
@@ -133,7 +130,7 @@ public class Pathfinding : MonoBehaviour
     /// </summary>
     /// <param name="path"></param>
     /// <returns></returns>
-    Vector3[] SimplifyPath(List<Node> path)
+    private static Vector3[] SimplifyPath(List<Node> path)
     {
         var waypoints = new List<Vector3>();
         var directionOld = Vector2.zero;
@@ -148,10 +145,12 @@ public class Pathfinding : MonoBehaviour
             {
                 // Does not adapt to height of character
                 // Maybe put empty game object at ground level
-                waypoints.Add(path[i].WorldPosition + Vector3.up );
+                waypoints.Add(path[i].WorldPosition + Vector3.up);
             }
+
             directionOld = directionNew;
         }
+
         return waypoints.ToArray();
     }
 
@@ -163,13 +162,11 @@ public class Pathfinding : MonoBehaviour
     /// Reference: http://catlikecoding.com/unity/tutorials/curves-and-splines/
     /// </summary>
     /// <returns> Interpolated path </returns>
-    Vector3[] BezierPath(Vector3[] waypoints, float smoothness)
+    private static Vector3[] BezierPath(Vector3[] waypoints, float smoothness)
     {
         if (waypoints.Length <= 1)
             return waypoints;
 
-        List<Vector3> points;
-        List<Vector3> smoothedWaypoints;
         var waypointsLength = 0;
         var curvedLength = 0;
 
@@ -178,14 +175,13 @@ public class Pathfinding : MonoBehaviour
         waypointsLength = waypoints.Length;
 
         curvedLength = (waypointsLength * Mathf.RoundToInt(smoothness)) - 1;
-        smoothedWaypoints = new List<Vector3>(curvedLength);
+        var smoothedWaypoints = new List<Vector3>(curvedLength);
 
-        var t = 0.0f;
         for (var pointInTimeOnCurve = 0; pointInTimeOnCurve < curvedLength + 1; pointInTimeOnCurve++)
         {
-            t = Mathf.InverseLerp(0, curvedLength, pointInTimeOnCurve);
+            var t = Mathf.InverseLerp(0, curvedLength, pointInTimeOnCurve);
 
-            points = new List<Vector3>(waypoints);
+            var points = new List<Vector3>(waypoints);
 
             for (var j = waypointsLength - 1; j > 0; j--)
             {
@@ -207,7 +203,7 @@ public class Pathfinding : MonoBehaviour
     /// <param name="nodeA"></param>
     /// <param name="nodeB"></param>
     /// <returns></returns>
-    int GetDistance(Node nodeA, Node nodeB)
+    private static int GetDistance(Node nodeA, Node nodeB)
     {
         var dstX = Mathf.Abs(nodeA.GridX - nodeB.GridX);
         var dstY = Mathf.Abs(nodeA.GridY - nodeB.GridY);
@@ -216,6 +212,4 @@ public class Pathfinding : MonoBehaviour
             return 14 * dstY + 10 * (dstX - dstY);
         return 14 * dstX + 10 * (dstY - dstX);
     }
-
-
 }

@@ -11,26 +11,26 @@ public class Grid : MonoBehaviour
     public TerrainType[] walkableRegions;
     public float checkRadiusModifier = 2;
     public float terrainOffset = 3;
-    LayerMask walkableMask;
-    Dictionary<int, int> walkableRegionsDictionary = new Dictionary<int, int>();
+    LayerMask _walkableMask;
+    Dictionary<int, int> _walkableRegionsDictionary = new Dictionary<int, int>();
 
     public Node[,] grid;
 
-    protected float nodeDiameter;
-    protected int gridSizeX, gridSizeY;
+    protected float NodeDiameter;
+    protected int GridSizeX, GridSizeY;
 
     void Awake()
     {
-        nodeDiameter = nodeRadius * 2;
-        gridSizeX = Mathf.RoundToInt(gridWorldSize.x / nodeDiameter);
-        gridSizeY = Mathf.RoundToInt(gridWorldSize.y / nodeDiameter);
+        NodeDiameter = nodeRadius * 2;
+        GridSizeX = Mathf.RoundToInt(gridWorldSize.x / NodeDiameter);
+        GridSizeY = Mathf.RoundToInt(gridWorldSize.y / NodeDiameter);
 
 
         // Note: Layers are stored in a 32 bit int
         foreach (var region in walkableRegions)
         {
-            walkableMask.value |= region.terrainMask.value;
-            walkableRegionsDictionary.Add((int)Mathf.Log((float)region.terrainMask.value, 2f), region.terrainPenalty);
+            _walkableMask.value |= region.terrainMask.value;
+            _walkableRegionsDictionary.Add((int)Mathf.Log((float)region.terrainMask.value, 2f), region.terrainPenalty);
         }
 
         CreateGrid();
@@ -40,20 +40,20 @@ public class Grid : MonoBehaviour
     {
         get
         {
-            return gridSizeX * gridSizeY;
+            return GridSizeX * GridSizeY;
         }
     }
 
     void CreateGrid()
     {
-        grid = new Node[gridSizeX, gridSizeY];
+        grid = new Node[GridSizeX, GridSizeY];
         var worldBottomLeft = transform.position - Vector3.right * gridWorldSize.x / 2 - Vector3.forward * gridWorldSize.y / 2;
 
-        for (var x = 0; x < gridSizeX; x++)
+        for (var x = 0; x < GridSizeX; x++)
         {
-            for (var y = 0; y < gridSizeY; y++)
+            for (var y = 0; y < GridSizeY; y++)
             {
-                var worldPoint = worldBottomLeft + Vector3.right * (x * nodeDiameter + nodeRadius) + Vector3.forward * (y * nodeDiameter + nodeRadius);
+                var worldPoint = worldBottomLeft + Vector3.right * (x * NodeDiameter + nodeRadius) + Vector3.forward * (y * NodeDiameter + nodeRadius);
                 var walkable = !(Physics.CheckSphere(worldPoint, nodeRadius * checkRadiusModifier, unwalkableMask));
 
                 var movementPenalty = 0;
@@ -63,11 +63,11 @@ public class Grid : MonoBehaviour
                 {
                     var ray = new Ray(worldPoint + Vector3.up * 50, Vector3.down);
                     RaycastHit hit;
-                    if (Physics.Raycast(ray, out hit, 100, walkableMask))
+                    if (Physics.Raycast(ray, out hit, 100, _walkableMask))
                     {
 
                         // Determine the movement penalty of the terrain type
-                        walkableRegionsDictionary.TryGetValue(hit.collider.gameObject.layer, out movementPenalty);
+                        _walkableRegionsDictionary.TryGetValue(hit.collider.gameObject.layer, out movementPenalty);
 
                         // Get the height of a block
                         worldPoint.y = height = (hit.transform.position.y + hit.collider.bounds.extents.y);
@@ -104,7 +104,7 @@ public class Grid : MonoBehaviour
                 var checkX = node.GridX + x;
                 var checkY = node.GridY + y;
 
-                if (checkX >= 0 && checkX < gridSizeX && checkY >= 0 && checkY < gridSizeY)
+                if (checkX >= 0 && checkX < GridSizeX && checkY >= 0 && checkY < GridSizeY)
                 {
                     neighbours.Add(grid[checkX, checkY]);
                 }
@@ -126,8 +126,8 @@ public class Grid : MonoBehaviour
         percentX = Mathf.Clamp01(percentX);
         percentY = Mathf.Clamp01(percentY);
 
-        var x = Mathf.RoundToInt((gridSizeX - 1) * percentX);
-        var y = Mathf.RoundToInt((gridSizeY - 1) * percentY);
+        var x = Mathf.RoundToInt((GridSizeX - 1) * percentX);
+        var y = Mathf.RoundToInt((GridSizeY - 1) * percentY);
         return grid[x, y];
     }
 
@@ -136,13 +136,13 @@ public class Grid : MonoBehaviour
     void OnDrawGizmos()
     {
         Gizmos.DrawWireCube(transform.position, new Vector3(gridWorldSize.x, 1, gridWorldSize.y));
-        if (grid != null && displayGridGizmos)
+        
+        if (grid == null || !displayGridGizmos) return;
+        
+        foreach (var n in grid)
         {
-            foreach (var n in grid)
-            {
-                Gizmos.color = (n.Walkable == Walkable.Passable) ? Color.white : Color.red;
-                Gizmos.DrawCube(n.WorldPosition, Vector3.one * (nodeDiameter - .1f));
-            }
+            Gizmos.color = (n.Walkable == Walkable.Passable) ? Color.white : Color.red;
+            Gizmos.DrawCube(n.WorldPosition, Vector3.one * (NodeDiameter - .1f));
         }
     }
 

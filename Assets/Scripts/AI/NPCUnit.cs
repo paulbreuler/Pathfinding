@@ -15,8 +15,8 @@ public class NPCUnit : Unit
     {
         //TODO: Fails here with index out of range when rapidly changing paths
         Vector3 currentWaypoint;
-        if (m_path != null && m_path.Length > 0)
-            currentWaypoint = m_path[0];
+        if (MPath is { Length: > 0 })
+            currentWaypoint = MPath[0];
         else
             currentWaypoint = transform.position;
 
@@ -25,17 +25,17 @@ public class NPCUnit : Unit
 
             if (Vector3.Distance(transform.position, currentWaypoint) < distanceToWaypoint)
             {
-                m_targetIndex++;
+                MTargetIndex++;
 
                 // If we are done with path.
-                if (m_targetIndex >= m_path.Length)
+                if (MTargetIndex >= MPath.Length)
                 {
                     isMoving = false;
                     yield break;
                 }
 
 
-                currentWaypoint = m_path[m_targetIndex];
+                currentWaypoint = MPath[MTargetIndex];
             }
 
             var forward = transform.TransformDirection(Vector3.forward) * stopBeforeDistance;
@@ -45,7 +45,7 @@ public class NPCUnit : Unit
             {
                 isMoving = false;
                 isTargetReached = true;
-                m_path = null;
+                MPath = null;
                 yield break;
             }
             else

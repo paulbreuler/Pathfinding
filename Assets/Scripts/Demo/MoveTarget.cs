@@ -2,21 +2,20 @@
 
 public class MoveTarget : MonoBehaviour {
 
-    Vector3 newPosition;
+    Vector3 _newPosition;
     void Start()
     {
-        newPosition = transform.position;
+        _newPosition = transform.position;
     }
 
     void Update () {
         if (Input.GetMouseButtonDown(0))
         {
-            RaycastHit hit;
             var ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-            if (Physics.Raycast(ray, out hit))
+            if (Physics.Raycast(ray, out var hit))
             {
-                newPosition = hit.point;
-                transform.position = newPosition + Vector3.up;
+                _newPosition = hit.point;
+                transform.position = _newPosition + Vector3.up;
             }
         }
     }
