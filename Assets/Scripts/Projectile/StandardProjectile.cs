@@ -42,7 +42,7 @@ public class StandardProjectile : ProjectileBase
         if (other.gameObject == m_target)
         {
             var damageData = new DamageData();
-            damageData.damage = m_damage;
+            damageData.Damage = m_damage;
 
             var messageHandler = m_target.GetComponent<MessageHandler>();
 

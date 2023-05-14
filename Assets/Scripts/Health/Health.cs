@@ -34,7 +34,7 @@ public class Health : MonoBehaviour {
 
                 if(damageData != null)
                 {
-                    ApplyDamage(damageData.damage, go);
+                    ApplyDamage(damageData.Damage, go);
                 }
 
                 break;
@@ -55,8 +55,8 @@ public class Health : MonoBehaviour {
             if(m_messageHandler)
             {
                 var deathData = new DeathData();
-                deathData.attacker = go;
-                deathData.attacked = gameObject; // this object was attacked
+                deathData.Attacker = go;
+                deathData.Attacked = gameObject; // this object was attacked
 
                 m_messageHandler.CustomSendMessage(MessageType.DIED, gameObject, deathData);
             }
@@ -65,8 +65,8 @@ public class Health : MonoBehaviour {
         if (m_messageHandler)
         {
             var healthData = new HealthData();
-            healthData.curHealth = m_currentHealth;
-            healthData.maxHealth = maxHealth;
+            healthData.CurHealth = m_currentHealth;
+            healthData.MaxHealth = maxHealth;
 
         }
     }

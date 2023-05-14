@@ -1,19 +1,19 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
+using System.Linq;
 
 public class RangeChecker : MonoBehaviour
 {
     public List<string> tags;
 
-    private List<GameObject> m_targets = new List<GameObject>();
+    private readonly List<GameObject> _targets = new();
 
     void OnTriggerEnter(Collider other)
     {
-
         var invalid = true;
-        for (var i = 0; i < tags.Count; i++)
+        foreach (var t in tags)
         {
-            if (other.CompareTag(tags[i]))
+            if (other.CompareTag(t))
             {
                 invalid = false;
             }
@@ -24,7 +24,7 @@ public class RangeChecker : MonoBehaviour
                 return;
             }
 
-            m_targets.Add(other.gameObject);
+            _targets.Add(other.gameObject);
         }
     }
 
@@ -34,11 +34,11 @@ public class RangeChecker : MonoBehaviour
     /// <param name="other"></param>
     void OnTriggerExit(Collider other)
     {
-        for (var i = 0; i < m_targets.Count; i++)
+        for (var i = 0; i < _targets.Count; i++)
         {
-            if (other.gameObject == m_targets[i])
+            if (other.gameObject == _targets[i])
             {
-                m_targets.Remove(other.gameObject);
+                _targets.Remove(other.gameObject);
 
                 return;
             }
@@ -48,7 +48,7 @@ public class RangeChecker : MonoBehaviour
     /// <returns>List of targets acquired</returns>
     public List<GameObject> GetValidtargets()
     {
-        return m_targets;
+        return _targets;
     }
 
     /// <summary>
@@ -58,14 +58,7 @@ public class RangeChecker : MonoBehaviour
     /// <returns> true is GameObject is in list of valid game objects.</returns>
     public bool InRange(GameObject go)
     {
-        for (var i = 0; i < m_targets.Count; i++)
-        {
-            if (go == m_targets[i])
-            {
-                return true;
-            }
-        }
-        return false;
+        return _targets.Any(t => go == t);
     }
 
 

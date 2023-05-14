@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
+using System.Linq;
 
 
 // Used to inherit data types
@@ -19,7 +20,7 @@ public class MessageHandler : MonoBehaviour
     [Tooltip("Types of messages this GameObject can receive")]
     public List<MessageType> messages;
 
-    private List<MessageDelegate> m_messageDelegates = new List<MessageDelegate>();
+    private readonly List<MessageDelegate> _messageDelegates = new();
 
     /// <summary>
     /// Register a new delegate
@@ -27,31 +28,22 @@ public class MessageHandler : MonoBehaviour
     /// <param name="messageDelegate"></param>
     public void RegisterDelegate(MessageDelegate messageDelegate)
     {
-        m_messageDelegates.Add(messageDelegate);
+        _messageDelegates.Add(messageDelegate);
 
     }
 
     public bool CustomSendMessage(MessageType messageType, GameObject go, MessageData data)
     {
-        var approved = false;
+        var approved = messages.Any(t => t == messageType);
 
         // Check to see if we have a message that can be sent
-        for (var i = 0; i < messages.Count; i++)
-        {
-            if (messages[i] == messageType)
-            {
-                approved = true;
-                break;
-            }
-
-        }
 
         if (!approved)
             return false;
 
-        for (var i = 0; i < m_messageDelegates.Count; i++)
+        foreach (var messageDelegate in _messageDelegates)
         {
-            m_messageDelegates[i](messageType, go, data);
+            messageDelegate(messageType, go, data);
         }
 
         return true;
@@ -60,7 +52,7 @@ public class MessageHandler : MonoBehaviour
 }
 
 public class DamageData : MessageData {
-    public int damage;
+    public int Damage;
 }
 
 
@@ -69,8 +61,8 @@ public class DamageData : MessageData {
 /// </summary>
 public class DeathData : MessageData
 {
-    public GameObject attacker;
-    public GameObject attacked;
+    public GameObject Attacker;
+    public GameObject Attacked;
 }
 
 /// <summary>
@@ -78,6 +70,6 @@ public class DeathData : MessageData
 /// </summary>
 public class HealthData: MessageData
 {
-    public int maxHealth;
-    public int curHealth;
+    public int MaxHealth;
+    public int CurHealth;
 }
