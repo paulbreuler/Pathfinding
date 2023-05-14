@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using System.Collections;
 
 public class StandardProjectile : ProjectileBase
 {
@@ -42,10 +41,10 @@ public class StandardProjectile : ProjectileBase
     {
         if (other.gameObject == m_target)
         {
-            DamageData damageData = new DamageData();
+            var damageData = new DamageData();
             damageData.damage = m_damage;
 
-            MessageHandler messageHandler = m_target.GetComponent<MessageHandler>();
+            var messageHandler = m_target.GetComponent<MessageHandler>();
 
             messageHandler.CustomSendMessage(MessageType.DAMAGED, m_turret, damageData);
         }

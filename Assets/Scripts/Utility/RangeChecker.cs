@@ -10,8 +10,8 @@ public class RangeChecker : MonoBehaviour
     void OnTriggerEnter(Collider other)
     {
 
-        bool invalid = true;
-        for (int i = 0; i < tags.Count; i++)
+        var invalid = true;
+        for (var i = 0; i < tags.Count; i++)
         {
             if (other.CompareTag(tags[i]))
             {
@@ -34,7 +34,7 @@ public class RangeChecker : MonoBehaviour
     /// <param name="other"></param>
     void OnTriggerExit(Collider other)
     {
-        for (int i = 0; i < m_targets.Count; i++)
+        for (var i = 0; i < m_targets.Count; i++)
         {
             if (other.gameObject == m_targets[i])
             {
@@ -58,7 +58,7 @@ public class RangeChecker : MonoBehaviour
     /// <returns> true is GameObject is in list of valid game objects.</returns>
     public bool InRange(GameObject go)
     {
-        for (int i = 0; i < m_targets.Count; i++)
+        for (var i = 0; i < m_targets.Count; i++)
         {
             if (go == m_targets[i])
             {

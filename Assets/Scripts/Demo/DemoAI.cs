@@ -1,5 +1,4 @@
 ﻿using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class DemoAI : MonoBehaviour
@@ -26,10 +25,10 @@ public class DemoAI : MonoBehaviour
     {
         if (Input.GetKeyUp(KeyCode.Space))
         {
-            foreach (GameObject s in Seekers)
+            foreach (var s in Seekers)
             {
-                int numX = (int)Random.Range(0, m_grid.gridWorldSize.x);
-                int numY = (int)Random.Range(0, m_grid.gridWorldSize.y);
+                var numX = (int)Random.Range(0, m_grid.gridWorldSize.x);
+                var numY = (int)Random.Range(0, m_grid.gridWorldSize.y);
                 s.GetComponent<Unit>().target = m_grid.grid[numX, numY].NodeMesh.transform;
                 m_grid.grid[numX, numY].NodeMesh.GetComponent<GridColor>().UpdateColor(Walkable.Blocked);
                 StartCoroutine(ResetGridColor(m_grid.grid[numX, numY]));
@@ -45,7 +44,7 @@ public class DemoAI : MonoBehaviour
 
         if (Input.GetKeyUp(KeyCode.R))
         {
-            foreach (GameObject s in Seekers)
+            foreach (var s in Seekers)
             {
                 StartCoroutine(RespawnAI(s));
             }
@@ -55,7 +54,7 @@ public class DemoAI : MonoBehaviour
 
     public void SetBackToMainTarget()
     {
-        foreach (GameObject s in Seekers)
+        foreach (var s in Seekers)
         {
             s.GetComponent<Unit>().target = player.transform;
         }
@@ -71,11 +70,11 @@ public class DemoAI : MonoBehaviour
     {
         yield return new WaitForSeconds(0.2f);
         go.transform.position = respawn[Random.Range(0, respawn.Length)].transform.position;
-        foreach(Node n in GetComponent<Grid>().grid)
+        foreach(var n in GetComponent<Grid>().grid)
         {
-            if(n.walkable != Walkable.Impassable)
+            if(n.Walkable != Walkable.Impassable)
             {
-                n.walkable = Walkable.Passable;
+                n.Walkable = Walkable.Passable;
             }
         }
         go.GetComponent<Unit>().isMoving = true;

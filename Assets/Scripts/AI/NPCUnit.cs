@@ -38,8 +38,8 @@ public class NPCUnit : Unit
                 currentWaypoint = m_path[m_targetIndex];
             }
 
-            Vector3 forward = transform.TransformDirection(Vector3.forward) * stopBeforeDistance;
-            RaycastHit? isForwardCollision = DetectRaycastCollision(forward, transform.position, collisionDetectionDistance);
+            var forward = transform.TransformDirection(Vector3.forward) * stopBeforeDistance;
+            var isForwardCollision = DetectRaycastCollision(forward, transform.position, collisionDetectionDistance);
             // Determine if target space is occupied
             if (isForwardCollision != null && ((RaycastHit)isForwardCollision).transform == target)
             {

@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using System.Collections;
 
 public class Death : MonoBehaviour
 {
@@ -20,7 +19,7 @@ public class Death : MonoBehaviour
             case MessageType.DIED:
                // Debug.Log("Death Note: " + gameObject.name);
 
-                DeathData deathData = data as DeathData;
+                var deathData = data as DeathData;
 
                 if (deathData != null)
                     Die();

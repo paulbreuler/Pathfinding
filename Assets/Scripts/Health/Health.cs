@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using System.Collections;
 
 public class Health : MonoBehaviour {
 
@@ -31,7 +30,7 @@ public class Health : MonoBehaviour {
             case MessageType.DAMAGED:
                 
                 // Cast message to damage data
-                DamageData damageData = data as DamageData;
+                var damageData = data as DamageData;
 
                 if(damageData != null)
                 {
@@ -55,7 +54,7 @@ public class Health : MonoBehaviour {
             // Send out message letting other know I died.
             if(m_messageHandler)
             {
-                DeathData deathData = new DeathData();
+                var deathData = new DeathData();
                 deathData.attacker = go;
                 deathData.attacked = gameObject; // this object was attacked
 
@@ -65,7 +64,7 @@ public class Health : MonoBehaviour {
 
         if (m_messageHandler)
         {
-            HealthData healthData = new HealthData();
+            var healthData = new HealthData();
             healthData.curHealth = m_currentHealth;
             healthData.maxHealth = maxHealth;
 

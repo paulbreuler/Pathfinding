@@ -59,14 +59,14 @@ public abstract class Unit : MonoBehaviour
 
     public virtual void Update()
     {
-        Vector3 right = transform.TransformDirection(Vector3.forward + Vector3.right).normalized * collisionDetectionDistance;
-        Vector3 left = transform.TransformDirection(Vector3.forward + Vector3.left).normalized * collisionDetectionDistance;
+        var right = transform.TransformDirection(Vector3.forward + Vector3.right).normalized * collisionDetectionDistance;
+        var left = transform.TransformDirection(Vector3.forward + Vector3.left).normalized * collisionDetectionDistance;
 
         DetectRaycastCollision(right, transform.position, collisionDetectionDistance);
         DetectRaycastCollision(left, transform.position, collisionDetectionDistance);
 
-        Vector3 forward = transform.TransformDirection(Vector3.forward) * collisionDetectionDistance;
-        RaycastHit? isForwardCollision = DetectRaycastCollision(forward, transform.position, collisionDetectionDistance);
+        var forward = transform.TransformDirection(Vector3.forward) * collisionDetectionDistance;
+        var isForwardCollision = DetectRaycastCollision(forward, transform.position, collisionDetectionDistance);
 
         if (Time.time > nextActionTime)
         {
@@ -106,8 +106,8 @@ public abstract class Unit : MonoBehaviour
         lastTargetPosition = target.position;
 
         // Jump obstacle
-        Vector3 lowerForward = transform.TransformDirection(Vector3.forward) * collisionDetectionDistance;
-        RaycastHit? islowerForwardCollision = DetectRaycastCollision(lowerForward, (transform.position + new Vector3(0, -0.5f, 0)), collisionDetectionDistance);
+        var lowerForward = transform.TransformDirection(Vector3.forward) * collisionDetectionDistance;
+        var islowerForwardCollision = DetectRaycastCollision(lowerForward, (transform.position + new Vector3(0, -0.5f, 0)), collisionDetectionDistance);
         if (islowerForwardCollision != null)
         {
             if (m_characterController.isGrounded && ((RaycastHit)islowerForwardCollision).transform.tag == "Jumpable")
@@ -120,7 +120,7 @@ public abstract class Unit : MonoBehaviour
 
     public void UpdatePath()
     {
-        lastNodePosition.walkable = Walkable.Passable;
+        lastNodePosition.Walkable = Walkable.Passable;
         PathRequestManager.RequestPath(transform.position, target.position, OnPathFound);
     }
 
@@ -142,7 +142,7 @@ public abstract class Unit : MonoBehaviour
 
     public virtual IEnumerator FollowPath()
     {
-        Vector3 currentWaypoint = m_path[0];
+        var currentWaypoint = m_path[0];
         while (true)
         {
 
@@ -174,13 +174,13 @@ public abstract class Unit : MonoBehaviour
     /// <param name="destination"> Target to be moved towards </param>
     public virtual void UpdatePosition(Vector3 destination)
     {
-        Node node = m_grid.NodeFromWorldPoint(transform.position);
+        var node = m_grid.NodeFromWorldPoint(transform.position);
 
-        Vector3 direction = destination - transform.position;
+        var direction = destination - transform.position;
         m_verticalSpeed -= Mathf.Clamp(gravity * Time.deltaTime, 0, 30);
 
-        float penalty = node.movementPenalty == 0 ? 1 : node.movementPenalty;
-        Vector3 movement = new Vector3(0, m_verticalSpeed, 0) + direction.normalized * movementSpeed * (100-penalty)/100 * Time.deltaTime;
+        float penalty = node.MovementPenalty == 0 ? 1 : node.MovementPenalty;
+        var movement = new Vector3(0, m_verticalSpeed, 0) + direction.normalized * movementSpeed * (100-penalty)/100 * Time.deltaTime;
         // Handles steps and other cases by default
         m_characterController.Move(movement);
         //transform.Translate(direction.normalized * movementSpeed * Time.deltaTime, Space.World);
@@ -206,19 +206,19 @@ public abstract class Unit : MonoBehaviour
     /// </summary>
     public void UpdateNodePosition()
     {
-        Node node = m_grid.NodeFromWorldPoint(transform.position);
+        var node = m_grid.NodeFromWorldPoint(transform.position);
 
         if (isMoving == false)
         {
             lastPositionNeighbors = m_grid.GetNeighbours(node);
-            foreach (Node n in lastPositionNeighbors)
+            foreach (var n in lastPositionNeighbors)
             {
-                if (n.walkable != Walkable.Impassable)
-                    n.walkable = Walkable.Blocked;
+                if (n.Walkable != Walkable.Impassable)
+                    n.Walkable = Walkable.Blocked;
             }
-            node.walkable = Walkable.Blocked;
+            node.Walkable = Walkable.Blocked;
             lastNodePosition = node;
-            currentPosition = new Vector2(node.gridX, node.gridY);
+            currentPosition = new Vector2(node.GridX, node.GridY);
             return;
         }
 
@@ -226,21 +226,21 @@ public abstract class Unit : MonoBehaviour
         {
             preventExtraNodeUpdate = false;
             lastPositionNeighbors = m_grid.GetNeighbours(node);
-            lastNodePosition.walkable = Walkable.Passable;
+            lastNodePosition.Walkable = Walkable.Passable;
             if (lastPositionNeighbors != null)
-                foreach (Node n in lastPositionNeighbors)
+                foreach (var n in lastPositionNeighbors)
                 {
-                    if (n.walkable != Walkable.Impassable)
-                        n.walkable = Walkable.Passable;
+                    if (n.Walkable != Walkable.Impassable)
+                        n.Walkable = Walkable.Passable;
                 }
             if (!node.Equals(lastNodePosition))
                 spacesMoved++;
         }
         else
         {
-            node.walkable = Walkable.Blocked;
+            node.Walkable = Walkable.Blocked;
             lastNodePosition = node;
-            currentPosition = new Vector2(node.gridX, node.gridY);
+            currentPosition = new Vector2(node.GridX, node.GridY);
         }
 
 
@@ -257,7 +257,7 @@ public abstract class Unit : MonoBehaviour
 
         if (m_path != null)
         {
-            for (int i = m_targetIndex; i < m_path.Length; i++)
+            for (var i = m_targetIndex; i < m_path.Length; i++)
             {
                 Gizmos.color = Color.black;
                 Gizmos.DrawCube(m_path[i], Vector3.one);
@@ -276,7 +276,7 @@ public abstract class Unit : MonoBehaviour
 
     public RaycastHit? DetectRaycastCollision(Vector3 direction, Vector3 position, float distance)
     {
-        Ray ray = new Ray(position, direction);
+        var ray = new Ray(position, direction);
         RaycastHit hit;
         if (Physics.Raycast(ray, out hit, distance))
         {

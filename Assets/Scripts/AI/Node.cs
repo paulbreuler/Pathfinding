@@ -1,55 +1,54 @@
 ﻿using UnityEngine;
-using System.Collections;
 
 public enum Walkable { Blocked, Passable, Impassable };
 
 public class Node : IHeapItem<Node>
 {
 
-    private Walkable m_walkable;
-    public Walkable walkable
+    private Walkable _mWalkable;
+    public Walkable Walkable
     {
         get
         {
-            return m_walkable;
+            return _mWalkable;
         }
         set
         {
-            m_walkable = value;
+            _mWalkable = value;
             if(NodeMesh != null)
-            NodeMesh.GetComponent<GridColor>().UpdateColor(value);
+                NodeMesh.GetComponent<GridColor>().UpdateColor(value);
         }
         
     }
-    public Vector3 worldPosition;
-    public int gridX;
-    public int gridY;
-    public float height;
-    public int movementPenalty;
+    public readonly Vector3 WorldPosition;
+    public readonly int GridX;
+    public readonly int GridY;
+    public float Height;
+    public int MovementPenalty;
 
-    public int gCost;
-    public int hCost;
-    public Node parent;
+    public int GCost;
+    public int HCost;
+    public Node Parent;
 
     public GameObject NodeMesh;
 
-    int heapIndex;
+    private int _heapIndex;
 
-    public Node(Walkable _walkable, Vector3 _worldPos, int _gridX, int _gridY,float _height, int _penalty)
+    public Node(Walkable walkable, Vector3 worldPos, int gridX, int gridY,float height, int penalty)
     {
-        walkable = _walkable;
-        worldPosition = _worldPos;
-        gridX = _gridX;
-        gridY = _gridY;
-        height = _height;
-        movementPenalty = _penalty;
+        Walkable = walkable;
+        WorldPosition = worldPos;
+        GridX = gridX;
+        GridY = gridY;
+        Height = height;
+        MovementPenalty = penalty;
     }
 
-    public int fCost
+    public int FCost
     {
         get
         {
-            return gCost + hCost;
+            return GCost + HCost;
         }
     }
 
@@ -57,29 +56,31 @@ public class Node : IHeapItem<Node>
     {
         get
         {
-            return heapIndex;
+            return _heapIndex;
         }
         set
         {
-            heapIndex = value;
+            _heapIndex = value;
         }
     }
 
     public int CompareTo(Node nodeToCompare)
     {
         // if F cost is lower
-        int compare = fCost.CompareTo(nodeToCompare.fCost);
+        var compare = FCost.CompareTo(nodeToCompare.FCost);
 
         // We and lower H cost if F cost is the same.
         if (compare == 0)
         {
-            compare = hCost.CompareTo(nodeToCompare.hCost);
+            compare = HCost.CompareTo(nodeToCompare.HCost);
         }
         return -compare;
     }
 
-    public override bool Equals(object obj)
+    public override bool Equals(object obj) => WorldPosition == ((Node)obj).WorldPosition;
+    
+    public override int GetHashCode()
     {
-        return worldPosition == ((Node)obj).worldPosition;
+        return WorldPosition.GetHashCode();
     }
 }

@@ -33,10 +33,10 @@ public class MessageHandler : MonoBehaviour
 
     public bool CustomSendMessage(MessageType messageType, GameObject go, MessageData data)
     {
-        bool approved = false;
+        var approved = false;
 
         // Check to see if we have a message that can be sent
-        for (int i = 0; i < messages.Count; i++)
+        for (var i = 0; i < messages.Count; i++)
         {
             if (messages[i] == messageType)
             {
@@ -49,7 +49,7 @@ public class MessageHandler : MonoBehaviour
         if (!approved)
             return false;
 
-        for (int i = 0; i < m_messageDelegates.Count; i++)
+        for (var i = 0; i < m_messageDelegates.Count; i++)
         {
             m_messageDelegates[i](messageType, go, data);
         }

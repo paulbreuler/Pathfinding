@@ -1,6 +1,4 @@
-﻿using UnityEngine;
-using System.Collections;
-using System;
+﻿using System;
 
 /// <summary>
 /// Generic heap.
@@ -45,7 +43,7 @@ public class Heap<T> where T : IHeapItem<T>
     public T RemoveFirst()
     {
         // Remove first item and reduce heap count.
-        T firstItem = m_items[0];
+        var firstItem = m_items[0];
         m_currentItemCount--;
 
         // Take last item and make it first
@@ -89,9 +87,9 @@ public class Heap<T> where T : IHeapItem<T>
     {
         while (true)
         {
-            int childIndexLeft = item.HeapIndex * 2 + 1;    // 2n + 1
-            int childIndexRight = item.HeapIndex * 2 + 2;   // 2n + 2
-            int swapIndex = 0;
+            var childIndexLeft = item.HeapIndex * 2 + 1;    // 2n + 1
+            var childIndexRight = item.HeapIndex * 2 + 2;   // 2n + 2
+            var swapIndex = 0;
 
             // Does this item have a child on the left. Set to left by default.
             if (childIndexLeft < m_currentItemCount)
@@ -137,11 +135,11 @@ public class Heap<T> where T : IHeapItem<T>
     void SortUp(T item)
     {
         // find parent (n-1)/2
-        int parentIndex = (item.HeapIndex - 1) / 2;
+        var parentIndex = (item.HeapIndex - 1) / 2;
 
         while (true)
         {
-            T parentItem = m_items[parentIndex];
+            var parentItem = m_items[parentIndex];
             if (item.CompareTo(parentItem) > 0)
             {
                 Swap(item, parentItem);
@@ -164,7 +162,7 @@ public class Heap<T> where T : IHeapItem<T>
     {
         m_items[itemA.HeapIndex] = itemB;
         m_items[itemB.HeapIndex] = itemA;
-        int itemAIndex = itemA.HeapIndex;
+        var itemAIndex = itemA.HeapIndex;
         itemA.HeapIndex = itemB.HeapIndex;
         itemB.HeapIndex = itemAIndex;
     }

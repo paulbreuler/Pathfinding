@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using System.Collections;
 using System.Collections.Generic;
 
 public class TurretAI : MonoBehaviour
@@ -43,17 +42,17 @@ public class TurretAI : MonoBehaviour
 
     void TargetNearest()
     {
-        List<GameObject> validTargets = m_rangeChecker.GetValidtargets();
+        var validTargets = m_rangeChecker.GetValidtargets();
 
         GameObject curTarget = null;
-        float closestDist = 0.0f;
+        var closestDist = 0.0f;
 
-        for (int i = 0; i < validTargets.Count; i++)
+        for (var i = 0; i < validTargets.Count; i++)
         {
             if (!validTargets[i])
                 continue;
 
-            float dist = Vector3.Distance(transform.position, validTargets[i].transform.position);
+            var dist = Vector3.Distance(transform.position, validTargets[i].transform.position);
 
             if (!curTarget || dist < closestDist)
             {
@@ -68,14 +67,14 @@ public class TurretAI : MonoBehaviour
 
     void TargetFarthest()
     {
-        List<GameObject> validTargets = m_rangeChecker.GetValidtargets();
+        var validTargets = m_rangeChecker.GetValidtargets();
 
         GameObject curTarget = null;
-        float farthestDis = 0.0f;
+        var farthestDis = 0.0f;
 
-        for (int i = 0; i < validTargets.Count; i++)
+        for (var i = 0; i < validTargets.Count; i++)
         {
-            float dist = Vector3.Distance(transform.position, validTargets[i].transform.position);
+            var dist = Vector3.Distance(transform.position, validTargets[i].transform.position);
 
             if (!curTarget || dist > farthestDis)
             {

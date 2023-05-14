@@ -25,7 +25,7 @@ public class ShootingSystem : MonoBehaviour
         m_fireTimer += Time.deltaTime;
         if (m_fireTimer >= fireRate)
         {
-            float angle = Quaternion.Angle(transform.rotation, Quaternion.LookRotation(m_target.transform.position - transform.position));
+            var angle = Quaternion.Angle(transform.rotation, Quaternion.LookRotation(m_target.transform.position - transform.position));
             if (angle < fieldOfView)
             {
                 SpawnProjectile();
@@ -38,11 +38,11 @@ public class ShootingSystem : MonoBehaviour
 
     void SpawnProjectile()
     {
-        for (int i = 0; i < projectileSpawns.Count; i++)
+        for (var i = 0; i < projectileSpawns.Count; i++)
         {
             if (projectileSpawns[i])
             {
-                GameObject proj = Instantiate(projectile, projectileSpawns[i].transform.position, Quaternion.Euler(projectileSpawns[i].transform.forward)) as GameObject;
+                var proj = Instantiate(projectile, projectileSpawns[i].transform.position, Quaternion.Euler(projectileSpawns[i].transform.forward)) as GameObject;
 
                 // Using base class we can inherit whatever type of projectile class we create.
                 proj.GetComponent<ProjectileBase>().FireProjectile(projectileSpawns[i], m_target, damage);
