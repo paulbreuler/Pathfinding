@@ -11,8 +11,8 @@ public class Grid : MonoBehaviour
     public TerrainType[] walkableRegions;
     public float checkRadiusModifier = 2;
     public float terrainOffset = 3;
-    LayerMask _walkableMask;
-    Dictionary<int, int> _walkableRegionsDictionary = new Dictionary<int, int>();
+    private LayerMask _walkableMask;
+    private readonly Dictionary<int, int> _walkableRegionsDictionary = new();
 
     public Node[,] grid;
 
@@ -36,13 +36,7 @@ public class Grid : MonoBehaviour
         CreateGrid();
     }
 
-    public int MaxSize
-    {
-        get
-        {
-            return GridSizeX * GridSizeY;
-        }
-    }
+    public int MaxSize => GridSizeX * GridSizeY;
 
     void CreateGrid()
     {
@@ -62,10 +56,8 @@ public class Grid : MonoBehaviour
                 if (walkable)
                 {
                     var ray = new Ray(worldPoint + Vector3.up * 50, Vector3.down);
-                    RaycastHit hit;
-                    if (Physics.Raycast(ray, out hit, 100, _walkableMask))
+                    if (Physics.Raycast(ray, out var hit, 100, _walkableMask))
                     {
-
                         // Determine the movement penalty of the terrain type
                         _walkableRegionsDictionary.TryGetValue(hit.collider.gameObject.layer, out movementPenalty);
 
@@ -135,6 +127,7 @@ public class Grid : MonoBehaviour
 
     void OnDrawGizmos()
     {
+        // TODO: Does not seem to work in newer versions of Unity
         Gizmos.DrawWireCube(transform.position, new Vector3(gridWorldSize.x, 1, gridWorldSize.y));
         
         if (grid == null || !displayGridGizmos) return;
