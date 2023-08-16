@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 
 [RequireComponent(typeof(Rigidbody))]
@@ -29,22 +30,22 @@ public abstract class Unit : MonoBehaviour
     public bool IsSafeToUpdatePath;
     public bool IsMoving;
     public bool IsTargetReached = false;
-    public int JumpSpeed = 50;
+    public int JumpForce = 50;
     #endregion
 
     #region member variables
 
     private float _mVerticalSpeed = 0;
-    protected Vector3[] MPath;
+    protected Vector3[] PathToFollow;
     protected int TargetIndex;
     private Node _lastNodePosition;
     private List<Node> _lastPositionNeighbors;
-    private Vector3 _mLastKnownPosition;
-    private Quaternion _mLookAtRotation;
-    private Grid _mGrid;
+    private Vector3 _lastKnownPosition;
+    private Quaternion _lookAtRotation;
+    private Grid _gridReference;
     private Coroutine _lastRoutine;
     private bool _preventExtraNodeUpdate;
-    protected Rigidbody _rigidbody;
+    protected Rigidbody Rigidbody;
     private RaycastHit? _isForwardCollision;
     #endregion
 
@@ -54,7 +55,7 @@ public abstract class Unit : MonoBehaviour
     public virtual void Awake()
     {
         if (AStar != null)
-            _mGrid = AStar.GetComponent<Grid>();
+            _gridReference = AStar.GetComponent<Grid>();
     }
 
     /// <summary>
@@ -62,8 +63,8 @@ public abstract class Unit : MonoBehaviour
     /// </summary>
     public virtual void Start()
     {
-        _rigidbody = GetComponent<Rigidbody>();
-        _rigidbody.useGravity = false; // We'll handle gravity manually
+        Rigidbody = GetComponent<Rigidbody>();
+        Rigidbody.useGravity = false; // We'll handle gravity manually
         PathRequestManager.RequestPath(transform.position, Target.position, OnPathFound);
         LastTargetPosition = Target.position;
     }
@@ -81,7 +82,7 @@ public abstract class Unit : MonoBehaviour
 
         if (!IsMoving)
         {
-            _rigidbody.velocity = Vector3.zero;
+            Rigidbody.velocity = Vector3.zero;
         }
 
     }
@@ -155,10 +156,10 @@ public abstract class Unit : MonoBehaviour
 
         if (IsGrounded() && ((RaycastHit)isLowerForwardCollision).transform.CompareTag("Jumpable"))
         {
-            _mVerticalSpeed = JumpSpeed;
+            _mVerticalSpeed = JumpForce;
 
             var jumpDirection = (transform.forward + transform.up).normalized;  // Adds forward momentum with the jump
-            _rigidbody.AddForce(jumpDirection * JumpSpeed, ForceMode.Impulse);
+            Rigidbody.AddForce(jumpDirection * JumpForce, ForceMode.Impulse);
         }
     }
 
@@ -175,7 +176,7 @@ public abstract class Unit : MonoBehaviour
     protected virtual void OnPathFound(Vector3[] newPath, bool pathSuccessful)
     {
         if (!pathSuccessful) return;
-        MPath = newPath;
+        PathToFollow = newPath;
         TargetIndex = 0;
 
         // Stop coroutine if it is already running.
@@ -187,7 +188,7 @@ public abstract class Unit : MonoBehaviour
 
     protected virtual IEnumerator FollowPath()
     {
-        var currentWaypoint = MPath[0];
+        var currentWaypoint = PathToFollow[0];
         while (true)
         {
 
@@ -196,13 +197,13 @@ public abstract class Unit : MonoBehaviour
                 TargetIndex++;
 
                 // If we are done with path.
-                if (TargetIndex >= MPath.Length)
+                if (TargetIndex >= PathToFollow.Length)
                 {
                     IsMoving = false;
                     yield break;
                 }
 
-                currentWaypoint = MPath[TargetIndex];
+                currentWaypoint = PathToFollow[TargetIndex];
             }
 
             // Occurs each frame
@@ -215,7 +216,7 @@ public abstract class Unit : MonoBehaviour
     {
         var direction = (targetPosition - transform.position).normalized;
 
-        var node = _mGrid.NodeFromWorldPoint(transform.position);
+        var node = _gridReference.NodeFromWorldPoint(transform.position);
         float penalty = node.MovementPenalty == 0 ? 1 : node.MovementPenalty;
 
         // Apply the penalty to the desired velocity
@@ -233,7 +234,7 @@ public abstract class Unit : MonoBehaviour
 
         desiredVelocity.y = _mVerticalSpeed;
 
-        _rigidbody.velocity = desiredVelocity;
+        Rigidbody.velocity = desiredVelocity;
     }
 
     /// <summary>
@@ -241,13 +242,13 @@ public abstract class Unit : MonoBehaviour
     /// </summary>
     protected virtual void UpdateRotation()
     {
-        _mLastKnownPosition = Target.transform.position;
-        _mLookAtRotation = Quaternion.LookRotation(_mLastKnownPosition - transform.position);
+        _lastKnownPosition = Target.transform.position;
+        _lookAtRotation = Quaternion.LookRotation(_lastKnownPosition - transform.position);
         //m_lookAtRotation.y = 0; removing Y breaks rotation. Probably has to do with conversion to quaternion.
 
         // If we are not already looking at target continue to rotate.
-        if (transform.rotation != _mLookAtRotation)
-            transform.rotation = Quaternion.RotateTowards(transform.rotation, _mLookAtRotation, RotationSpeed * Time.deltaTime);
+        if (transform.rotation != _lookAtRotation)
+            transform.rotation = Quaternion.RotateTowards(transform.rotation, _lookAtRotation, RotationSpeed * Time.deltaTime);
     }
 
 
@@ -256,11 +257,11 @@ public abstract class Unit : MonoBehaviour
     /// </summary>
     private void UpdateNodePosition()
     {
-        var node = _mGrid.NodeFromWorldPoint(transform.position);
+        var node = _gridReference.NodeFromWorldPoint(transform.position);
 
         if (IsMoving == false)
         {
-            _lastPositionNeighbors = _mGrid.GetNeighbours(node);
+            _lastPositionNeighbors = _gridReference.GetNeighbours(node);
             foreach (var n in _lastPositionNeighbors.Where(n => n.Walkable != Walkable.Impassable))
             {
                 n.Walkable = Walkable.Blocked;
@@ -274,7 +275,7 @@ public abstract class Unit : MonoBehaviour
         if (_lastNodePosition != null && IsMoving)
         {
             _preventExtraNodeUpdate = false;
-            _lastPositionNeighbors = _mGrid.GetNeighbours(node);
+            _lastPositionNeighbors = _gridReference.GetNeighbours(node);
             _lastNodePosition.Walkable = Walkable.Passable;
             if (_lastPositionNeighbors != null)
                 foreach (var n in _lastPositionNeighbors.Where(n => n.Walkable != Walkable.Impassable))
@@ -308,16 +309,13 @@ public abstract class Unit : MonoBehaviour
     /// </summary>
     public void OnDrawGizmos()
     {
-        if (!DrawGizmos)
-            return;
-
-        if (MPath == null) return;
-        for (var i = TargetIndex; i < MPath.Length; i++)
+        if (PathToFollow == null) return;
+        for (var i = TargetIndex; i < PathToFollow.Length; i++)
         {
             Gizmos.color = Color.black;
-            Gizmos.DrawCube(MPath[i], Vector3.one);
+            Gizmos.DrawCube(PathToFollow[i], Vector3.one);
 
-            Gizmos.DrawLine(i == TargetIndex ? transform.position : MPath[i - 1], MPath[i]);
+            Gizmos.DrawLine(i == TargetIndex ? transform.position : PathToFollow[i - 1], PathToFollow[i]);
         }
     }
 

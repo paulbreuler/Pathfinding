@@ -12,9 +12,9 @@ public class NPCUnit : Unit
 
     protected override IEnumerator FollowPath()
     {
-        if(MPath.Length  == 0) yield break;
+        if(PathToFollow.Length  == 0) yield break;
 
-        var currentWaypoint = MPath[0];
+        var currentWaypoint = PathToFollow[0];
         
         while (true)
         {
@@ -28,11 +28,11 @@ public class NPCUnit : Unit
             {
                 TargetIndex++;
 
-                if (TargetIndex >= MPath.Length)
+                if (TargetIndex >= PathToFollow.Length)
                 {
                     yield break;
                 }
-                currentWaypoint = MPath[TargetIndex];
+                currentWaypoint = PathToFollow[TargetIndex];
             }
 
             UpdatePosition(currentWaypoint);
@@ -53,6 +53,6 @@ public class NPCUnit : Unit
 
     private bool PathIsFinished()
     {
-        return TargetIndex >= MPath.Length;
+        return TargetIndex >= PathToFollow.Length;
     }
 }
