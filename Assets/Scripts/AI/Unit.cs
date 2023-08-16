@@ -30,8 +30,6 @@ public abstract class Unit : MonoBehaviour
     public bool IsMoving;
     public bool IsTargetReached = false;
     public int JumpSpeed = 50;
-    public bool ShouldJump;
-
     #endregion
 
     #region member variables
@@ -149,24 +147,20 @@ public abstract class Unit : MonoBehaviour
     /// </summary>
     private void HandleJumping()
     {
+
         var lowerForward = transform.TransformDirection(Vector3.forward) * CollisionDetectionDistance;
         var isLowerForwardCollision = DetectRaycastCollision(lowerForward, (transform.position + new Vector3(0, -0.5f, 0)), CollisionDetectionDistance);
 
         if (isLowerForwardCollision == null) return;
 
-        if (IsGrounded() && ((RaycastHit)isLowerForwardCollision).transform.tag == "Jumpable")
+        if (IsGrounded() && ((RaycastHit)isLowerForwardCollision).transform.CompareTag("Jumpable"))
         {
-            ShouldJump = true;
             _mVerticalSpeed = JumpSpeed;
+
             var jumpDirection = (transform.forward + transform.up).normalized;  // Adds forward momentum with the jump
             _rigidbody.AddForce(jumpDirection * JumpSpeed, ForceMode.Impulse);
         }
-        else
-        {
-            ShouldJump = false;
-        }
     }
-
 
 
     /// <summary>
@@ -180,17 +174,15 @@ public abstract class Unit : MonoBehaviour
 
     protected virtual void OnPathFound(Vector3[] newPath, bool pathSuccessful)
     {
-        if (pathSuccessful)
-        {
-            MPath = newPath;
-            TargetIndex = 0;
+        if (!pathSuccessful) return;
+        MPath = newPath;
+        TargetIndex = 0;
 
-            // Stop coroutine if it is already running.
-            if (_lastRoutine != null)
-                StopCoroutine(_lastRoutine);
+        // Stop coroutine if it is already running.
+        if (_lastRoutine != null)
+            StopCoroutine(_lastRoutine);
 
-            _lastRoutine = StartCoroutine(FollowPath());
-        }
+        _lastRoutine = StartCoroutine(FollowPath());
     }
 
     protected virtual IEnumerator FollowPath()
@@ -216,7 +208,6 @@ public abstract class Unit : MonoBehaviour
             // Occurs each frame
             UpdatePosition(currentWaypoint);
             yield return null;
-
         }
     }
 

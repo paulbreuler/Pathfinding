@@ -12,55 +12,47 @@ public class NPCUnit : Unit
 
     protected override IEnumerator FollowPath()
     {
-        var currentWaypoint = MPath is { Length: > 0 } ? MPath[0] : transform.position;
+        if(MPath.Length  == 0) yield break;
 
+        var currentWaypoint = MPath[0];
+        
         while (true)
         {
+            if (IsTargetInReach() || PathIsFinished())
+            {
+                IsMoving = false;
+                yield break;
+            }
 
             if (Vector3.Distance(transform.position, currentWaypoint) < DistanceToWaypoint)
             {
                 TargetIndex++;
 
-                if (MPath != null && TargetIndex < MPath.Length)
+                if (TargetIndex >= MPath.Length)
                 {
-                    currentWaypoint = MPath[TargetIndex];
+                    yield break;
                 }
-                else
-                {
-                    yield break; // Exit if the path doesn't exist or we're out of bounds.
-                }
+                currentWaypoint = MPath[TargetIndex];
             }
 
-            var forward = transform.TransformDirection(Vector3.forward) * StopBeforeDistance;
-            var isForwardCollision = DetectRaycastCollision(forward, transform.position, CollisionDetectionDistance);
-            // Determine if target space is occupied
-            if (isForwardCollision != null && ((RaycastHit)isForwardCollision).transform == Target)
-            {
-                IsMoving = false;
-                IsTargetReached = true;
-                MPath = null;
-                yield break;
-            }
-            else
-            {
-                // Occurs each frame
-                IsMoving = true;
-                IsTargetReached = false;
-                UpdatePosition(currentWaypoint);
-
-            }
-
-            // If we are done with path.
-            if (TargetIndex >= MPath.Length)
-            {
-                IsMoving = false;
-                _rigidbody.velocity = Vector3.zero;  // Reset velocity here
-                yield break;
-            }
-
-
+            UpdatePosition(currentWaypoint);
             yield return null;
+        }
+    }
 
-        } // End While
+    private bool IsTargetInReach()
+    {
+        // If the target is null or doesn't have the "Player" tag, it's not in reach.
+        if (Target == null || Target.tag != "Player") return false;
+
+        var distanceToTarget = Vector3.Distance(transform.position, Target.position);
+        var reachDistance = StopBeforeDistance; // Or any other value you find suitable.
+
+        return distanceToTarget <= reachDistance;
+    }
+
+    private bool PathIsFinished()
+    {
+        return TargetIndex >= MPath.Length;
     }
 }
