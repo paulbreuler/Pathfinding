@@ -14,6 +14,8 @@ public abstract class Unit : MonoBehaviour
     public Vector3 LastTargetPosition;
     [Range(1, 20)]
     public float MovementSpeed = 10;
+
+    public float MaxSteeringForce = 5.0f;
     [Range(100, 500)]
     public float RotationSpeed = 85;
     [Tooltip("How close to get to waypoint before moving towards next. Fixes movement bug. " +
@@ -30,6 +32,7 @@ public abstract class Unit : MonoBehaviour
     public bool IsMoving;
     public bool IsTargetReached = false;
     public int JumpSpeed = 1;
+
     #endregion
 
     #region member variables
@@ -45,32 +48,47 @@ public abstract class Unit : MonoBehaviour
     private Grid _mGrid;
     private Coroutine _lastRoutine;
     private bool _preventExtraNodeUpdate;
+    private Rigidbody _rigidbody;
+    private RaycastHit? _isForwardCollision;
     #endregion
 
+    /// <summary>
+    /// Called when the script instance is being loaded.
+    /// </summary>
     public virtual void Awake()
     {
         if (AStar != null)
             _mGrid = AStar.GetComponent<Grid>();
     }
 
+    /// <summary>
+    /// Use this for initialization.
+    /// </summary>
     public virtual void Start()
     {
-        _characterController = GetComponent<CharacterController>();
+        _rigidbody = GetComponent<Rigidbody>();
+        _rigidbody.useGravity = false; // We'll handle gravity manually
         PathRequestManager.RequestPath(transform.position, Target.position, OnPathFound);
         LastTargetPosition = Target.position;
     }
 
+    /// <summary>
+    /// Update is called once per frame.
+    /// </summary>
     protected virtual void Update()
     {
-        var right = transform.TransformDirection(Vector3.forward + Vector3.right).normalized * CollisionDetectionDistance;
-        var left = transform.TransformDirection(Vector3.forward + Vector3.left).normalized * CollisionDetectionDistance;
+        HandleCollisionChecks();
 
-        DetectRaycastCollision(right, transform.position, CollisionDetectionDistance);
-        DetectRaycastCollision(left, transform.position, CollisionDetectionDistance);
+        ManagePathUpdates();
 
-        var forward = transform.TransformDirection(Vector3.forward) * CollisionDetectionDistance;
-        var isForwardCollision = DetectRaycastCollision(forward, transform.position, CollisionDetectionDistance);
+        HandleJumping();
+    }
 
+    /// <summary>
+    /// Manages the path updates and conditions that trigger them.
+    /// </summary>
+    private void ManagePathUpdates()
+    {
         if (Time.time > NextActionTime)
         {
             NextActionTime += Period;
@@ -92,9 +110,9 @@ public abstract class Unit : MonoBehaviour
         {
             UpdatePath();
         }
-        else if (isForwardCollision != null && ((RaycastHit)isForwardCollision).transform.gameObject.GetComponent<Unit>() != null)
+        else if (_isForwardCollision != null && ((RaycastHit)_isForwardCollision).transform.gameObject.GetComponent<Unit>() != null)
         {
-            if ((!((RaycastHit)isForwardCollision).transform.gameObject.GetComponent<Unit>().IsMoving && IsSafeToUpdatePath))
+            if ((!((RaycastHit)_isForwardCollision).transform.gameObject.GetComponent<Unit>().IsMoving && IsSafeToUpdatePath))
             {
                 UpdatePath();
             }
@@ -119,6 +137,38 @@ public abstract class Unit : MonoBehaviour
         }
     }
 
+    private void HandleCollisionChecks()
+    {
+        //var right = transform.TransformDirection(Vector3.forward + Vector3.right).normalized * CollisionDetectionDistance;
+        //var left = transform.TransformDirection(Vector3.forward + Vector3.left).normalized * CollisionDetectionDistance;
+
+        //DetectRaycastCollision(right, transform.position, CollisionDetectionDistance);
+        //DetectRaycastCollision(left, transform.position, CollisionDetectionDistance);
+
+        var forward = transform.TransformDirection(Vector3.forward) * CollisionDetectionDistance;
+        _isForwardCollision = DetectRaycastCollision(forward, transform.position, CollisionDetectionDistance);
+    }
+
+
+    /// <summary>
+    /// Manage the jump action if the conditions are met.
+    /// </summary>
+    private void HandleJumping()
+    {
+        var lowerForward = transform.TransformDirection(Vector3.forward) * CollisionDetectionDistance;
+        var isLowerForwardCollision = DetectRaycastCollision(lowerForward, (transform.position + new Vector3(0, -0.5f, 0)), CollisionDetectionDistance);
+
+        if (isLowerForwardCollision == null) return;
+
+        if (IsGrounded() && ((RaycastHit)isLowerForwardCollision).transform.tag == "Jumpable")
+        {
+            _mVerticalSpeed = JumpSpeed;
+        }
+    }
+
+    /// <summary>
+    /// Updates the path for the unit.
+    /// </summary>
     public void UpdatePath()
     {
         _lastNodePosition.Walkable = Walkable.Passable;
@@ -168,23 +218,22 @@ public abstract class Unit : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Calculates movement towards @param(destination).
-    /// </summary>
-    /// <param name="destination"> Target to be moved towards </param>
-    protected virtual void UpdatePosition(Vector3 destination)
+    public void UpdatePosition(Vector3 targetPosition)
     {
-        var position = transform.position;
-        var node = _mGrid.NodeFromWorldPoint(position);
+        Vector3 desiredVelocity = (targetPosition - transform.position).normalized * MovementSpeed;
 
-        var direction = destination - position;
-        _mVerticalSpeed -= Mathf.Clamp(Gravity * Time.deltaTime, 0, 30);
+        if (!IsGrounded())
+        {
+            _mVerticalSpeed -= Gravity * Time.deltaTime;
+        }
+        else
+        {
+            _mVerticalSpeed = 0;
+        }
 
-        float penalty = node.MovementPenalty == 0 ? 1 : node.MovementPenalty;
-        var movement = new Vector3(0, _mVerticalSpeed, 0) + direction.normalized * (MovementSpeed * (100-penalty))/100 * Time.deltaTime;
-        // Handles steps and other cases by default
-        _characterController.Move(movement);
-        //transform.Translate(direction.normalized * movementSpeed * Time.deltaTime, Space.World);
+        desiredVelocity.y = _mVerticalSpeed;
+
+        _rigidbody.velocity = desiredVelocity;
     }
 
     /// <summary>
@@ -244,6 +293,17 @@ public abstract class Unit : MonoBehaviour
     }
 
     /// <summary>
+    /// Determines if the unit is grounded.
+    /// </summary>
+    /// <returns>True if grounded, false otherwise.</returns>
+    private bool IsGrounded()
+    {
+        float distanceToGround = GetComponent<Collider>().bounds.extents.y;
+        return Physics.Raycast(transform.position, -Vector3.up, distanceToGround + 0.1f);
+    }
+
+
+    /// <summary>
     /// Draw waypoint path in editor.
     /// </summary>
     public void OnDrawGizmos()
@@ -251,39 +311,33 @@ public abstract class Unit : MonoBehaviour
         if (!DrawGizmos)
             return;
 
-        if (MPath != null)
+        if (MPath == null) return;
+        for (var i = TargetIndex; i < MPath.Length; i++)
         {
-            for (var i = TargetIndex; i < MPath.Length; i++)
-            {
-                Gizmos.color = Color.black;
-                Gizmos.DrawCube(MPath[i], Vector3.one);
+            Gizmos.color = Color.black;
+            Gizmos.DrawCube(MPath[i], Vector3.one);
 
-                if (i == TargetIndex)
-                {
-                    Gizmos.DrawLine(transform.position, MPath[i]);
-                }
-                else
-                {
-                    Gizmos.DrawLine(MPath[i - 1], MPath[i]);
-                }
-            }
+            Gizmos.DrawLine(i == TargetIndex ? transform.position : MPath[i - 1], MPath[i]);
         }
     }
 
+    /// <summary>
+    /// Detects a raycast collision in a given direction.
+    /// </summary>
+    /// <param name="direction">Direction of the raycast.</param>
+    /// <param name="position">Starting position of the raycast.</param>
+    /// <param name="distance">Length of the raycast.</param>
+    /// <returns>A RaycastHit object if a collision was detected, null otherwise.</returns>
     public RaycastHit? DetectRaycastCollision(Vector3 direction, Vector3 position, float distance)
     {
         var ray = new Ray(position, direction);
-        RaycastHit hit;
-        if (Physics.Raycast(ray, out hit, distance))
+        if (Physics.Raycast(ray, out var hit, distance))
         {
             Debug.DrawRay(position, direction, Color.red);
             return hit;
         }
-        else
-        {
-            Debug.DrawRay(position, direction, Color.green);
-            return null;
-        }
+
+        Debug.DrawRay(position, direction, Color.green);
+        return null;
     }
 }
-

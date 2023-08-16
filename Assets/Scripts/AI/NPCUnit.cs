@@ -29,8 +29,6 @@ public class NPCUnit : Unit
                 {
                     yield break; // Exit if the path doesn't exist or we're out of bounds.
                 }
-
-                currentWaypoint = MPath[TargetIndex];
             }
 
             var forward = transform.TransformDirection(Vector3.forward) * StopBeforeDistance;
