@@ -50,6 +50,15 @@ public class NPCUnit : Unit
 
             }
 
+            // If we are done with path.
+            if (TargetIndex >= MPath.Length)
+            {
+                IsMoving = false;
+                _rigidbody.velocity = Vector3.zero;  // Reset velocity here
+                yield break;
+            }
+
+
             yield return null;
 
         } // End While

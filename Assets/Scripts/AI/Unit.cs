@@ -2,8 +2,8 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using UnityEngine.Serialization;
 
+[RequireComponent(typeof(Rigidbody))]
 public abstract class Unit : MonoBehaviour
 {
     #region public variables
@@ -15,7 +15,6 @@ public abstract class Unit : MonoBehaviour
     [Range(1, 20)]
     public float MovementSpeed = 10;
 
-    public float MaxSteeringForce = 5.0f;
     [Range(100, 500)]
     public float RotationSpeed = 85;
     [Tooltip("How close to get to waypoint before moving towards next. Fixes movement bug. " +
@@ -24,14 +23,14 @@ public abstract class Unit : MonoBehaviour
     [Tooltip("Distance to stop before target if target is occupying selected space")]
     public float StopBeforeDistance = 2;
     public float CollisionDetectionDistance = 2.0f;
-    public Vector2 CurrentPosition = new(0, 0);
     public int SpacesMoved = 0;
     public float Period = 5f;
     public float NextActionTime = 5f;
     public bool IsSafeToUpdatePath;
     public bool IsMoving;
     public bool IsTargetReached = false;
-    public int JumpSpeed = 1;
+    public int JumpSpeed = 50;
+    public bool ShouldJump;
 
     #endregion
 
@@ -40,7 +39,6 @@ public abstract class Unit : MonoBehaviour
     private float _mVerticalSpeed = 0;
     protected Vector3[] MPath;
     protected int TargetIndex;
-    private CharacterController _characterController;
     private Node _lastNodePosition;
     private List<Node> _lastPositionNeighbors;
     private Vector3 _mLastKnownPosition;
@@ -48,7 +46,7 @@ public abstract class Unit : MonoBehaviour
     private Grid _mGrid;
     private Coroutine _lastRoutine;
     private bool _preventExtraNodeUpdate;
-    private Rigidbody _rigidbody;
+    protected Rigidbody _rigidbody;
     private RaycastHit? _isForwardCollision;
     #endregion
 
@@ -82,6 +80,12 @@ public abstract class Unit : MonoBehaviour
         ManagePathUpdates();
 
         HandleJumping();
+
+        if (!IsMoving)
+        {
+            _rigidbody.velocity = Vector3.zero;
+        }
+
     }
 
     /// <summary>
@@ -125,16 +129,6 @@ public abstract class Unit : MonoBehaviour
         }
 
         LastTargetPosition = Target.position;
-
-        // Jump obstacle
-        var lowerForward = transform.TransformDirection(Vector3.forward) * CollisionDetectionDistance;
-        var isLowerForwardCollision = DetectRaycastCollision(lowerForward, (transform.position + new Vector3(0, -0.5f, 0)), CollisionDetectionDistance);
-        if (isLowerForwardCollision == null) return;
-        if (_characterController.isGrounded && ((RaycastHit)isLowerForwardCollision).transform.tag == "Jumpable")
-        {
-            _mVerticalSpeed = JumpSpeed;
-
-        }
     }
 
     private void HandleCollisionChecks()
@@ -162,9 +156,18 @@ public abstract class Unit : MonoBehaviour
 
         if (IsGrounded() && ((RaycastHit)isLowerForwardCollision).transform.tag == "Jumpable")
         {
+            ShouldJump = true;
             _mVerticalSpeed = JumpSpeed;
+            var jumpDirection = (transform.forward + transform.up).normalized;  // Adds forward momentum with the jump
+            _rigidbody.AddForce(jumpDirection * JumpSpeed, ForceMode.Impulse);
+        }
+        else
+        {
+            ShouldJump = false;
         }
     }
+
+
 
     /// <summary>
     /// Updates the path for the unit.
@@ -207,7 +210,6 @@ public abstract class Unit : MonoBehaviour
                     yield break;
                 }
 
-
                 currentWaypoint = MPath[TargetIndex];
             }
 
@@ -220,7 +222,7 @@ public abstract class Unit : MonoBehaviour
 
     public void UpdatePosition(Vector3 targetPosition)
     {
-        Vector3 desiredVelocity = (targetPosition - transform.position).normalized * MovementSpeed;
+        var desiredVelocity = (targetPosition - transform.position).normalized * MovementSpeed;
 
         if (!IsGrounded())
         {
@@ -267,7 +269,7 @@ public abstract class Unit : MonoBehaviour
             }
             node.Walkable = Walkable.Blocked;
             _lastNodePosition = node;
-            CurrentPosition = new Vector2(node.GridX, node.GridY);
+            new Vector2(node.GridX, node.GridY);
             return;
         }
 
@@ -288,7 +290,7 @@ public abstract class Unit : MonoBehaviour
         {
             node.Walkable = Walkable.Blocked;
             _lastNodePosition = node;
-            CurrentPosition = new Vector2(node.GridX, node.GridY);
+            new Vector2(node.GridX, node.GridY);
         }
     }
 
@@ -298,7 +300,7 @@ public abstract class Unit : MonoBehaviour
     /// <returns>True if grounded, false otherwise.</returns>
     private bool IsGrounded()
     {
-        float distanceToGround = GetComponent<Collider>().bounds.extents.y;
+        var distanceToGround = GetComponent<Collider>().bounds.extents.y;
         return Physics.Raycast(transform.position, -Vector3.up, distanceToGround + 0.1f);
     }
 
