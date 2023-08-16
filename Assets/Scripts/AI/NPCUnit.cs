@@ -3,56 +3,51 @@ using System.Collections;
 
 public class NPCUnit : Unit
 {
-
-    public override void Update()
+    protected override void Update()
     {
         base.Update();
         UpdateRotation();
 
     }
 
-    public override IEnumerator FollowPath()
+    protected override IEnumerator FollowPath()
     {
-        //TODO: Fails here with index out of range when rapidly changing paths
-        Vector3 currentWaypoint;
-        if (MPath is { Length: > 0 })
-            currentWaypoint = MPath[0];
-        else
-            currentWaypoint = transform.position;
+        var currentWaypoint = MPath is { Length: > 0 } ? MPath[0] : transform.position;
 
         while (true)
         {
 
-            if (Vector3.Distance(transform.position, currentWaypoint) < distanceToWaypoint)
+            if (Vector3.Distance(transform.position, currentWaypoint) < DistanceToWaypoint)
             {
-                MTargetIndex++;
+                TargetIndex++;
 
-                // If we are done with path.
-                if (MTargetIndex >= MPath.Length)
+                if (MPath != null && TargetIndex < MPath.Length)
                 {
-                    isMoving = false;
-                    yield break;
+                    currentWaypoint = MPath[TargetIndex];
+                }
+                else
+                {
+                    yield break; // Exit if the path doesn't exist or we're out of bounds.
                 }
 
-
-                currentWaypoint = MPath[MTargetIndex];
+                currentWaypoint = MPath[TargetIndex];
             }
 
-            var forward = transform.TransformDirection(Vector3.forward) * stopBeforeDistance;
-            var isForwardCollision = DetectRaycastCollision(forward, transform.position, collisionDetectionDistance);
+            var forward = transform.TransformDirection(Vector3.forward) * StopBeforeDistance;
+            var isForwardCollision = DetectRaycastCollision(forward, transform.position, CollisionDetectionDistance);
             // Determine if target space is occupied
-            if (isForwardCollision != null && ((RaycastHit)isForwardCollision).transform == target)
+            if (isForwardCollision != null && ((RaycastHit)isForwardCollision).transform == Target)
             {
-                isMoving = false;
-                isTargetReached = true;
+                IsMoving = false;
+                IsTargetReached = true;
                 MPath = null;
                 yield break;
             }
             else
             {
                 // Occurs each frame
-                isMoving = true;
-                isTargetReached = false;
+                IsMoving = true;
+                IsTargetReached = false;
                 UpdatePosition(currentWaypoint);
 
             }
@@ -61,7 +56,4 @@ public class NPCUnit : Unit
 
         } // End While
     }
-
-
-
 }
