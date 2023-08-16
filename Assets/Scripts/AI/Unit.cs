@@ -222,7 +222,14 @@ public abstract class Unit : MonoBehaviour
 
     public void UpdatePosition(Vector3 targetPosition)
     {
-        var desiredVelocity = (targetPosition - transform.position).normalized * MovementSpeed;
+        var direction = (targetPosition - transform.position).normalized;
+
+        var node = _mGrid.NodeFromWorldPoint(transform.position);
+        float penalty = node.MovementPenalty == 0 ? 1 : node.MovementPenalty;
+
+        // Apply the penalty to the desired velocity
+        var adjustedSpeed = MovementSpeed * (100 - penalty) / 100;
+        var desiredVelocity = direction * adjustedSpeed;
 
         if (!IsGrounded())
         {
